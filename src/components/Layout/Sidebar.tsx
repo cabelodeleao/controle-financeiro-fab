@@ -31,10 +31,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, collapsed, onToggle }) => {
   const { user, signOut } = useAuth();
 
-  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
-  const displayName = (user?.user_metadata?.full_name as string | undefined)
-    ?? user?.email?.split('@')[0]
-    ?? 'Leonardo';
+  const displayName = user?.email?.split('@')[0] ?? 'Leonardo';
   const initials = displayName.charAt(0).toUpperCase();
 
   return (
@@ -104,20 +101,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, colla
           </button>
         ) : (
           <div className="flex items-center gap-2">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={displayName}
-                className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
-              />
-            ) : (
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                style={{ backgroundColor: '#1565C0', color: '#fff' }}
-              >
-                {initials}
-              </div>
-            )}
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+              style={{ backgroundColor: '#1565C0', color: '#fff' }}
+            >
+              {initials}
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-white truncate">{displayName}</p>
               <p className="text-xs text-white/50">2026</p>
