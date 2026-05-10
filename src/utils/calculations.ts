@@ -179,11 +179,7 @@ export const getAnnualSummary = (transactions: Transaction[], settings: AppSetti
   };
 };
 
-const FIRST_BUSINESS_DAYS_2026: Partial<Record<Month, string>> = {
-  janeiro:   '2026-01-02',
-  fevereiro: '2026-02-02',
-  março:     '2026-03-02',
-  abril:     '2026-04-01',
+const FIRST_BUSINESS_DAYS_2026: Record<Month, string> = {
   maio:      '2026-05-04',
   junho:     '2026-06-01',
   julho:     '2026-07-01',

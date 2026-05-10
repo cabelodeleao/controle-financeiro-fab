@@ -1,8 +1,9 @@
 import React from 'react';
 import {
   LayoutDashboard, CalendarDays, ListChecks, BarChart3,
-  FileText, Settings, ChevronLeft, ChevronRight, TrendingUp, Plane,
+  FileText, Settings, ChevronLeft, ChevronRight, TrendingUp, Plane, LogOut,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 interface NavItem {
   id: string;
@@ -28,6 +29,14 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, collapsed, onToggle }) => {
+  const { user, signOut } = useAuth();
+
+  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
+  const displayName = (user?.user_metadata?.full_name as string | undefined)
+    ?? user?.email?.split('@')[0]
+    ?? 'Leonardo';
+  const initials = displayName.charAt(0).toUpperCase();
+
   return (
     <aside className={`
       flex flex-col bg-fab-900 text-white transition-all duration-300 ease-in-out flex-shrink-0
@@ -84,20 +93,45 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, colla
       </nav>
 
       {/* Footer */}
-      {!collapsed && (
-        <div className="px-4 py-4 border-t border-white/10">
+      <div className="px-3 py-4 border-t border-white/10">
+        {collapsed ? (
+          <button
+            onClick={signOut}
+            title="Sair"
+            className="w-full flex items-center justify-center p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            <LogOut size={16} />
+          </button>
+        ) : (
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-              style={{ backgroundColor: '#1565C0', color: '#fff' }}>
-              L
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-white">Leonardo</p>
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={displayName}
+                className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
+              />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                style={{ backgroundColor: '#1565C0', color: '#fff' }}
+              >
+                {initials}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-white truncate">{displayName}</p>
               <p className="text-xs text-white/50">2026</p>
             </div>
+            <button
+              onClick={signOut}
+              title="Sair"
+              className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+            >
+              <LogOut size={14} />
+            </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   );
 };

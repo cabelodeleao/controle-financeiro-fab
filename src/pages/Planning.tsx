@@ -138,6 +138,7 @@ export const Planning: React.FC = () => {
         </div>
         <RecurringTable
           expenses={recurringExpenses.filter(e => e.source !== 'salario-fab')}
+          categories={settings.categories}
           onEdit={openEdit} onDelete={handleDelete} onToggle={toggleActive}
         />
       </div>
