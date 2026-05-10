@@ -147,7 +147,7 @@ export const getAnnualSummary = (transactions: Transaction[], settings: AppSetti
     const expenses = getMonthExpenses(transactions, month);
     const invested = getMonthInvested(transactions, month);
     const balance = income.total - expenses.total - invested;
-    return { month, income: income.total, expenses: expenses.total, invested, balance };
+    return { month, income: income.total, extra: income.extra, expenses: expenses.total, invested, balance };
   });
 
   const totalIncome = monthlyBalances.reduce((s, m) => s + m.income, 0);

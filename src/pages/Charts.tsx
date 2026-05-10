@@ -25,6 +25,7 @@ export const Charts: React.FC = () => {
     return {
       month: MONTH_LABELS[month].slice(0, 3),
       receita: inc.total,
+      extra: inc.extra,
       despesas: exp.paid + exp.pending,
       investido: inv,
       saldo: bal,
@@ -77,6 +78,7 @@ export const Charts: React.FC = () => {
       'Salário': inc.salarioFAB,
       'Pensão': inc.pensao,
       '13º': inc.decimoTerceiro,
+      'Extra': inc.extra,
     };
   }), [transactions, settings]);
 
@@ -108,6 +110,7 @@ export const Charts: React.FC = () => {
               <Tooltip formatter={currency} />
               <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
               <Bar dataKey="receita" name="Receita" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="extra" name="Extra" fill="#10b981" radius={[4, 4, 0, 0]} />
               <Bar dataKey="despesas" name="Despesas" fill="#ef4444" radius={[4, 4, 0, 0]} />
               <Bar dataKey="investido" name="Investido" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -196,7 +199,7 @@ export const Charts: React.FC = () => {
         </ChartCard>
 
         {/* Origem da receita */}
-        <ChartCard title="Composição da Receita por Mês" subtitle="Salário, Pensão e 13º">
+        <ChartCard title="Composição da Receita por Mês" subtitle="Salário, Pensão, 13º e Extra">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={incomeBreakdown} margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -206,7 +209,8 @@ export const Charts: React.FC = () => {
               <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
               <Bar dataKey="Salário" stackId="a" fill="#1565C0" radius={[0, 0, 0, 0]} />
               <Bar dataKey="Pensão" stackId="a" fill="#7c3aed" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="13º" stackId="a" fill="#D4AF37" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="13º" stackId="a" fill="#D4AF37" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="Extra" stackId="a" fill="#22c55e" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
