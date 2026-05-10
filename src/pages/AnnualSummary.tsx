@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getAnnualSummary, formatCurrency, exportToCSV } from '../utils/calculations';
 import { MONTH_LABELS } from '../types';
-import { Trophy, TrendingDown, TrendingUp, DollarSign, PiggyBank, Download, Star } from 'lucide-react';
+import { Trophy, TrendingDown, TrendingUp, DollarSign, PiggyBank, Download, Star, Zap } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, Cell,
@@ -41,9 +41,10 @@ export const AnnualSummary: React.FC = () => {
       </div>
 
       {/* Main stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Receita Acumulada', value: summary.totalIncome, icon: <DollarSign size={20} />, color: 'bg-blue-600', text: 'text-blue-600' },
+          { label: 'Extra Acumulado', value: summary.totalExtra, icon: <Zap size={20} />, color: 'bg-emerald-500', text: 'text-emerald-600' },
           { label: 'Despesas Acumuladas', value: summary.totalExpenses, icon: <TrendingDown size={20} />, color: 'bg-red-500', text: 'text-red-500' },
           { label: 'Total Investido', value: summary.totalInvested, icon: <PiggyBank size={20} />, color: 'bg-purple-600', text: 'text-purple-600' },
           { label: 'Saldo Acumulado', value: summary.accumulatedBalance, icon: <TrendingUp size={20} />, color: summary.accumulatedBalance >= 0 ? 'bg-green-600' : 'bg-red-600', text: summary.accumulatedBalance >= 0 ? 'text-green-600' : 'text-red-600' },
@@ -61,11 +62,12 @@ export const AnnualSummary: React.FC = () => {
       </div>
 
       {/* Receita breakdown */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Total Salário', value: summary.totalSalarioFAB, emoji: '🎖️' },
           { label: 'Total Pensão', value: summary.totalPensao, emoji: '💰' },
           { label: 'Total 13º Salário', value: summary.totalDecimo, emoji: '🎉' },
+          { label: 'Total Extra', value: summary.totalExtra, emoji: '⚡' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
             <span className="text-2xl">{s.emoji}</span>

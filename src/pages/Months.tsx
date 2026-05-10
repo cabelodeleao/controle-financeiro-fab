@@ -8,7 +8,7 @@ import type { TransactionType } from '../types';
 import { MONTHS, MONTH_LABELS, getCategoryLabel } from '../types';
 import { StatusBadge, TypeBadge } from '../components/ui/Badge';
 import { ProgressBar } from '../components/ui/ProgressBar';
-import { CheckCircle, Clock, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { CheckCircle, Clock, TrendingUp, TrendingDown, DollarSign, Zap } from 'lucide-react';
 
 export const Months: React.FC = () => {
   const { transactions, settings, currentMonth, setCurrentMonth, updateTransaction } = useApp();
@@ -68,9 +68,10 @@ export const Months: React.FC = () => {
       </div>
 
       {/* Stats for current month */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Receita', value: formatCurrency(income.total), color: 'text-blue-600', bg: 'bg-blue-50', icon: <DollarSign size={18} className="text-blue-600" /> },
+          { label: 'Extra', value: formatCurrency(income.extra), color: 'text-emerald-600', bg: 'bg-emerald-50', icon: <Zap size={18} className="text-emerald-600" /> },
           { label: 'Despesas Pagas', value: formatCurrency(expenses.paid), color: 'text-red-600', bg: 'bg-red-50', icon: <TrendingDown size={18} className="text-red-600" /> },
           { label: 'Investido', value: formatCurrency(invested), color: 'text-purple-600', bg: 'bg-purple-50', icon: <TrendingUp size={18} className="text-purple-600" /> },
           { label: 'Saldo Final', value: formatCurrency(balance), color: balance >= 0 ? 'text-green-600' : 'text-red-600', bg: balance >= 0 ? 'bg-green-50' : 'bg-red-50', icon: balance >= 0 ? <CheckCircle size={18} className="text-green-600" /> : <Clock size={18} className="text-red-600" /> },
@@ -83,6 +84,32 @@ export const Months: React.FC = () => {
             <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Composição da receita */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <h3 className="text-sm font-bold text-slate-800 mb-4">Composição da Receita — {MONTH_LABELS[currentMonth]}</h3>
+        <div className="space-y-3">
+          {[
+            { label: 'Salário', value: income.salarioFAB, color: '#1565C0' },
+            { label: 'Pensão', value: income.pensao, color: '#7C3AED' },
+            ...(income.decimoTerceiro > 0 ? [{ label: '13º Salário', value: income.decimoTerceiro, color: '#D4AF37' }] : []),
+            { label: 'Extra', value: income.extra, color: '#22c55e' },
+          ].map(item => (
+            <div key={item.label} className="flex items-center gap-3">
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+              <span className="text-xs font-semibold text-slate-600 w-20 flex-shrink-0">{item.label}</span>
+              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${income.total > 0 ? (item.value / income.total) * 100 : 0}%`, backgroundColor: item.color }} />
+              </div>
+              <span className="text-xs font-bold text-slate-700 w-24 text-right flex-shrink-0">{formatCurrency(item.value)}</span>
+              <span className="text-xs text-slate-400 w-8 text-right flex-shrink-0">
+                {income.total > 0 ? ((item.value / income.total) * 100).toFixed(0) : 0}%
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -141,7 +168,8 @@ export const Months: React.FC = () => {
           <h3 className="text-sm font-bold text-slate-800 mb-4">Previsto × Realizado</h3>
           <div className="space-y-3">
             {[
-              { label: 'Receita', planned: income.total, realized: income.total },
+              { label: 'Receita', planned: income.total - income.extra, realized: income.total - income.extra },
+              { label: 'Extra', planned: income.extra, realized: income.extra },
               { label: 'Despesas', planned: expenses.planned, realized: expenses.paid + expenses.pending },
               { label: 'Pendente', planned: expenses.pending, realized: 0 },
             ].map(item => (
@@ -199,8 +227,11 @@ export const Months: React.FC = () => {
                   </td>
                   <td className="px-4 py-3"><TypeBadge type={t.type} /></td>
                   <td className="px-4 py-3 text-right text-xs text-slate-500 font-mono">{formatCurrency(t.plannedValue)}</td>
-                  <td className={`px-4 py-3 text-right font-bold font-mono text-sm ${t.type === 'receita' ? 'text-green-600' : 'text-red-600'}`}>
-                    {t.type === 'receita' ? '+' : '-'}{formatCurrency(t.realizedValue || t.plannedValue)}
+                  <td className={`px-4 py-3 text-right font-bold font-mono text-sm ${
+                    t.type === 'receita' || t.type === 'extra' || t.type === 'investimento'
+                      ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {t.type === 'receita' || t.type === 'extra' || t.type === 'investimento' ? '+' : '-'}{formatCurrency(t.realizedValue || t.plannedValue)}
                   </td>
                 </tr>
               ))}

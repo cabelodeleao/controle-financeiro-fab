@@ -200,9 +200,10 @@ export const Transactions: React.FC = () => {
                   <td className="px-4 py-3 text-xs text-slate-500">{MONEY_SOURCE_LABELS[t.source]}</td>
                   <td className="px-4 py-3 text-right font-mono text-sm text-slate-600">{formatCurrency(t.plannedValue)}</td>
                   <td className={`px-4 py-3 text-right font-mono text-sm font-semibold ${
-                    t.type === 'receita' ? 'text-green-600' : 'text-red-600'
+                    t.type === 'receita' || t.type === 'extra' || t.type === 'investimento'
+                      ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {t.type === 'receita' ? '+' : '-'}{formatCurrency(t.realizedValue || t.plannedValue)}
+                    {t.type === 'receita' || t.type === 'extra' || t.type === 'investimento' ? '+' : '-'}{formatCurrency(t.realizedValue || t.plannedValue)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-1">

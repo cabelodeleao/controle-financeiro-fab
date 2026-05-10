@@ -170,12 +170,16 @@ export const getAnnualSummary = (transactions: Transaction[], settings: AppSetti
     .filter(t => (t.source === 'decimo-terceiro-fab' || t.source === 'decimo-terceiro-pensao') && t.type === 'receita')
     .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0);
 
+  const totalExtra = transactions
+    .filter(t => t.type === 'extra')
+    .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0);
+
   const categoryBreakdown = getCategoryBreakdown(transactions);
 
   return {
     monthlyBalances, totalIncome, totalExpenses, totalInvested,
     accumulatedBalance, bestMonth, worstMonth,
-    totalSalarioFAB, totalPensao, totalDecimo, categoryBreakdown,
+    totalSalarioFAB, totalPensao, totalDecimo, totalExtra, categoryBreakdown,
   };
 };
 

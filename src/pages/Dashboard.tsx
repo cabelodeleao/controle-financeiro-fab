@@ -9,7 +9,7 @@ import { AlertBadge, StatusBadge, TypeBadge } from '../components/ui/Badge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import {
   TrendingUp, TrendingDown, Wallet, PiggyBank, Clock, CheckCircle,
-  DollarSign, Target,
+  DollarSign, Target, Zap,
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
@@ -99,7 +99,7 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* Stats grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Receita Total"
           value={formatCurrency(income.total)}
@@ -107,6 +107,14 @@ export const Dashboard: React.FC = () => {
           icon={<DollarSign size={22} className="text-white" />}
           color="bg-blue-600"
           trend="neutral"
+        />
+        <StatCard
+          title="Extra"
+          value={formatCurrency(income.extra)}
+          subtitle={income.extra > 0 ? 'Receita extra registrada' : 'Sem receita extra no mês'}
+          icon={<Zap size={22} className="text-white" />}
+          color="bg-emerald-500"
+          trend={income.extra > 0 ? 'up' : 'neutral'}
         />
         <StatCard
           title="Despesas Pagas"
