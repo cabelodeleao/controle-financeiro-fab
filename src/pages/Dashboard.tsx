@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  getMonthIncome, getMonthExpenses, getMonthInvested, getMonthBalance,
+  getMonthIncome, getMonthExpenses, getMonthInvested, getMonthExtra, getMonthBalance,
   getRegra702010Usage, calculate702010, generateAlerts, formatCurrency,
 } from '../utils/calculations';
 import { MONTH_LABELS, getCategoryLabel } from '../types';
@@ -39,12 +39,13 @@ export const Dashboard: React.FC = () => {
   const income = useMemo(() => getMonthIncome(transactions, currentMonth, settings), [transactions, currentMonth, settings]);
   const expenses = useMemo(() => getMonthExpenses(transactions, currentMonth), [transactions, currentMonth]);
   const invested = useMemo(() => getMonthInvested(transactions, currentMonth), [transactions, currentMonth]);
+  const extra = useMemo(() => getMonthExtra(transactions, currentMonth), [transactions, currentMonth]);
   const balance = useMemo(() => getMonthBalance(transactions, currentMonth, settings), [transactions, currentMonth, settings]);
   const usage = useMemo(() => getRegra702010Usage(transactions, currentMonth, settings), [transactions, currentMonth, settings]);
   const limits = useMemo(() => calculate702010(settings.salarioFAB, settings.regraPorcentagem), [settings]);
   const alerts = useMemo(() => generateAlerts(transactions, recurringExpenses, currentMonth, settings), [transactions, recurringExpenses, currentMonth, settings]);
 
-  const budgetUsedPct = income.total > 0 ? ((expenses.total + invested) / income.total) * 100 : 0;
+  const budgetUsedPct = (income.total + extra) > 0 ? ((expenses.total + invested) / (income.total + extra)) * 100 : 0;
 
   const recentTransactions = useMemo(() =>
     transactions
@@ -110,11 +111,11 @@ export const Dashboard: React.FC = () => {
         />
         <StatCard
           title="Extra"
-          value={formatCurrency(income.extra)}
-          subtitle={income.extra > 0 ? 'Receita extra registrada' : 'Sem receita extra no mês'}
+          value={formatCurrency(extra)}
+          subtitle={extra > 0 ? 'Receita extra registrada' : 'Sem receita extra no mês'}
           icon={<Zap size={22} className="text-white" />}
           color="bg-emerald-500"
-          trend={income.extra > 0 ? 'up' : 'neutral'}
+          trend={extra > 0 ? 'up' : 'neutral'}
         />
         <StatCard
           title="Despesas Pagas"
@@ -150,7 +151,6 @@ export const Dashboard: React.FC = () => {
             { label: 'Salário', value: income.salarioFAB, color: '#1565C0' },
             { label: 'Pensão', value: income.pensao, color: '#7C3AED' },
             ...(income.decimoTerceiro > 0 ? [{ label: '13º Salário', value: income.decimoTerceiro, color: '#D4AF37' }] : []),
-            ...(income.extra > 0 ? [{ label: 'Extra', value: income.extra, color: '#22c55e' }] : []),
           ].map(item => (
             <div key={item.label} className="flex items-center gap-3">
               <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
@@ -166,10 +166,10 @@ export const Dashboard: React.FC = () => {
             </div>
           ))}
         </div>
-        {income.extra > 0 && (
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 text-green-700">
-            <span className="text-base">💰</span>
-            <p className="text-xs font-semibold">Receita extra de {formatCurrency(income.extra)} registrada este mês!</p>
+        {extra > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 text-emerald-700">
+            <span className="text-base">⚡</span>
+            <p className="text-xs font-semibold">Extra de {formatCurrency(extra)} registrado este mês!</p>
           </div>
         )}
       </div>
@@ -336,7 +336,7 @@ export const Dashboard: React.FC = () => {
           />
         </div>
         <div className="flex justify-between mt-2 text-xs text-slate-500">
-          <span>Receita: {formatCurrency(income.total)}</span>
+          <span>Receita: {formatCurrency(income.total)}{extra > 0 ? ` + Extra: ${formatCurrency(extra)}` : ''}</span>
           <span>Gastos + Invest: {formatCurrency(expenses.total + invested)}</span>
           <span>Livre: {formatCurrency(balance)}</span>
         </div>

@@ -23,7 +23,7 @@ export const calculate702010 = (salarioFAB: number, percentages: AppSettings['re
 });
 
 export const getMonthIncome = (transactions: Transaction[], month: Month, settings: AppSettings) => {
-  const monthTxs = transactions.filter(t => t.month === month && (t.type === 'receita' || t.type === 'extra'));
+  const monthTxs = transactions.filter(t => t.month === month && t.type === 'receita');
   const salarioFAB = monthTxs
     .filter(t => t.source === 'salario-fab')
     .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0) || settings.salarioFAB;
@@ -33,10 +33,7 @@ export const getMonthIncome = (transactions: Transaction[], month: Month, settin
   const decimoTerceiro = monthTxs
     .filter(t => t.source === 'decimo-terceiro-fab' || t.source === 'decimo-terceiro-pensao')
     .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0);
-  const extra = monthTxs
-    .filter(t => t.source === 'extra')
-    .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0);
-  return { salarioFAB, pensao, decimoTerceiro, extra, total: salarioFAB + pensao + decimoTerceiro + extra };
+  return { salarioFAB, pensao, decimoTerceiro, total: salarioFAB + pensao + decimoTerceiro };
 };
 
 export const getMonthExpenses = (transactions: Transaction[], month: Month) => {
@@ -48,17 +45,22 @@ export const getMonthExpenses = (transactions: Transaction[], month: Month) => {
   return { paid, pending, total: paid + pending, planned };
 };
 
-export const getMonthInvested = (transactions: Transaction[], month: Month) => {
-  return transactions
+export const getMonthInvested = (transactions: Transaction[], month: Month) =>
+  transactions
     .filter(t => t.month === month && t.type === 'investimento')
     .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0);
-};
+
+export const getMonthExtra = (transactions: Transaction[], month: Month) =>
+  transactions
+    .filter(t => t.month === month && t.type === 'extra')
+    .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0);
 
 export const getMonthBalance = (transactions: Transaction[], month: Month, settings: AppSettings) => {
   const income = getMonthIncome(transactions, month, settings);
   const expenses = getMonthExpenses(transactions, month);
   const invested = getMonthInvested(transactions, month);
-  return income.total - expenses.total - invested;
+  const extra = getMonthExtra(transactions, month);
+  return income.total + extra - expenses.total - invested;
 };
 
 export const getCategoryBreakdown = (transactions: Transaction[], month?: Month) => {
@@ -103,7 +105,8 @@ export const generateAlerts = (
   const usage = getRegra702010Usage(transactions, month, settings);
   const income = getMonthIncome(transactions, month, settings);
   const expenses = getMonthExpenses(transactions, month);
-  const balance = income.total - expenses.total - getMonthInvested(transactions, month);
+  const extra = getMonthExtra(transactions, month);
+  const balance = income.total + extra - expenses.total - getMonthInvested(transactions, month);
 
   if (usage.lazer > usage.limits.lazer) {
     alerts.push({ id: 'lazer-over', type: 'danger', message: `Você ultrapassou o limite de lazer deste mês (${formatCurrency(usage.lazer)} / ${formatCurrency(usage.limits.lazer)})` });
@@ -112,7 +115,8 @@ export const generateAlerts = (
     alerts.push({ id: 'ess-over', type: 'warning', message: `Gastos essenciais acima do orçamento (${formatCurrency(usage.essenciais)} / ${formatCurrency(usage.limits.essenciais)})` });
   }
   if (expenses.pending > 0) {
-    alerts.push({ id: 'pending', type: 'warning', message: `Há ${transactions.filter(t => t.month === month && t.status === 'pendente' && t.type !== 'receita').length} despesa(s) pendente(s) de ${formatCurrency(expenses.pending)}` });
+    const expTypes = ['despesa-fixa', 'despesa-variavel', 'lazer', 'divida'];
+    alerts.push({ id: 'pending', type: 'warning', message: `Há ${transactions.filter(t => t.month === month && t.status === 'pendente' && expTypes.includes(t.type)).length} despesa(s) pendente(s) de ${formatCurrency(expenses.pending)}` });
   }
   if (balance > 0) {
     alerts.push({ id: 'positive', type: 'success', message: `Seu saldo está positivo: ${formatCurrency(balance)}` });
@@ -146,8 +150,9 @@ export const getAnnualSummary = (transactions: Transaction[], settings: AppSetti
     const income = getMonthIncome(transactions, month, settings);
     const expenses = getMonthExpenses(transactions, month);
     const invested = getMonthInvested(transactions, month);
-    const balance = income.total - expenses.total - invested;
-    return { month, income: income.total, extra: income.extra, expenses: expenses.total, invested, balance };
+    const extra = getMonthExtra(transactions, month);
+    const balance = income.total + extra - expenses.total - invested;
+    return { month, income: income.total, extra, expenses: expenses.total, invested, balance };
   });
 
   const totalIncome = monthlyBalances.reduce((s, m) => s + m.income, 0);

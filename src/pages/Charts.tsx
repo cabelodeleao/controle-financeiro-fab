@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  getMonthIncome, getMonthExpenses, getMonthInvested, getMonthBalance,
+  getMonthIncome, getMonthExpenses, getMonthInvested, getMonthExtra, getMonthBalance,
   calculate702010, getRegra702010Usage, formatCurrency,
 } from '../utils/calculations';
 import { MONTHS, MONTH_LABELS, getCategoryLabel } from '../types';
@@ -25,7 +25,7 @@ export const Charts: React.FC = () => {
     return {
       month: MONTH_LABELS[month].slice(0, 3),
       receita: inc.total,
-      extra: inc.extra,
+      extra: getMonthExtra(transactions, month),
       despesas: exp.paid + exp.pending,
       investido: inv,
       saldo: bal,
@@ -78,7 +78,6 @@ export const Charts: React.FC = () => {
       'Salário': inc.salarioFAB,
       'Pensão': inc.pensao,
       '13º': inc.decimoTerceiro,
-      'Extra': inc.extra,
     };
   }), [transactions, settings]);
 
@@ -199,7 +198,7 @@ export const Charts: React.FC = () => {
         </ChartCard>
 
         {/* Origem da receita */}
-        <ChartCard title="Composição da Receita por Mês" subtitle="Salário, Pensão, 13º e Extra">
+        <ChartCard title="Composição da Receita por Mês" subtitle="Salário, Pensão e 13º">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={incomeBreakdown} margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -209,8 +208,7 @@ export const Charts: React.FC = () => {
               <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
               <Bar dataKey="Salário" stackId="a" fill="#1565C0" radius={[0, 0, 0, 0]} />
               <Bar dataKey="Pensão" stackId="a" fill="#7c3aed" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="13º" stackId="a" fill="#D4AF37" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="Extra" stackId="a" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="13º" stackId="a" fill="#D4AF37" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>

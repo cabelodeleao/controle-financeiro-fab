@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  getMonthIncome, getMonthExpenses, getMonthInvested, getMonthBalance,
+  getMonthIncome, getMonthExpenses, getMonthInvested, getMonthExtra, getMonthBalance,
   getRegra702010Usage, calculate702010, formatCurrency, formatDate,
 } from '../utils/calculations';
 import type { TransactionType } from '../types';
@@ -16,6 +16,7 @@ export const Months: React.FC = () => {
   const income = useMemo(() => getMonthIncome(transactions, currentMonth, settings), [transactions, currentMonth, settings]);
   const expenses = useMemo(() => getMonthExpenses(transactions, currentMonth), [transactions, currentMonth]);
   const invested = useMemo(() => getMonthInvested(transactions, currentMonth), [transactions, currentMonth]);
+  const extra = useMemo(() => getMonthExtra(transactions, currentMonth), [transactions, currentMonth]);
   const balance = useMemo(() => getMonthBalance(transactions, currentMonth, settings), [transactions, currentMonth, settings]);
   const usage = useMemo(() => getRegra702010Usage(transactions, currentMonth, settings), [transactions, currentMonth, settings]);
   const limits = useMemo(() => calculate702010(settings.salarioFAB, settings.regraPorcentagem), [settings]);
@@ -71,7 +72,7 @@ export const Months: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Receita', value: formatCurrency(income.total), color: 'text-blue-600', bg: 'bg-blue-50', icon: <DollarSign size={18} className="text-blue-600" /> },
-          { label: 'Extra', value: formatCurrency(income.extra), color: 'text-emerald-600', bg: 'bg-emerald-50', icon: <Zap size={18} className="text-emerald-600" /> },
+          { label: 'Extra', value: formatCurrency(extra), color: 'text-emerald-600', bg: 'bg-emerald-50', icon: <Zap size={18} className="text-emerald-600" /> },
           { label: 'Despesas Pagas', value: formatCurrency(expenses.paid), color: 'text-red-600', bg: 'bg-red-50', icon: <TrendingDown size={18} className="text-red-600" /> },
           { label: 'Investido', value: formatCurrency(invested), color: 'text-purple-600', bg: 'bg-purple-50', icon: <TrendingUp size={18} className="text-purple-600" /> },
           { label: 'Saldo Final', value: formatCurrency(balance), color: balance >= 0 ? 'text-green-600' : 'text-red-600', bg: balance >= 0 ? 'bg-green-50' : 'bg-red-50', icon: balance >= 0 ? <CheckCircle size={18} className="text-green-600" /> : <Clock size={18} className="text-red-600" /> },
@@ -94,7 +95,6 @@ export const Months: React.FC = () => {
             { label: 'Salário', value: income.salarioFAB, color: '#1565C0' },
             { label: 'Pensão', value: income.pensao, color: '#7C3AED' },
             ...(income.decimoTerceiro > 0 ? [{ label: '13º Salário', value: income.decimoTerceiro, color: '#D4AF37' }] : []),
-            { label: 'Extra', value: income.extra, color: '#22c55e' },
           ].map(item => (
             <div key={item.label} className="flex items-center gap-3">
               <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
@@ -168,8 +168,8 @@ export const Months: React.FC = () => {
           <h3 className="text-sm font-bold text-slate-800 mb-4">Previsto × Realizado</h3>
           <div className="space-y-3">
             {[
-              { label: 'Receita', planned: income.total - income.extra, realized: income.total - income.extra },
-              { label: 'Extra', planned: income.extra, realized: income.extra },
+              { label: 'Receita', planned: income.total, realized: income.total },
+              { label: 'Extra', planned: extra, realized: extra },
               { label: 'Despesas', planned: expenses.planned, realized: expenses.paid + expenses.pending },
               { label: 'Pendente', planned: expenses.pending, realized: 0 },
             ].map(item => (
