@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { Transaction, RecurringExpense, AppSettings, Month } from '../types';
+import { DEFAULT_CATEGORIES } from '../types';
 import { generateId, generateRecurringForMonth } from '../utils/calculations';
 import { INITIAL_SETTINGS, INITIAL_RECURRING_EXPENSES, generateInitialTransactions } from '../data/initialData';
 
@@ -40,9 +41,11 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 }
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState<AppSettings>(() =>
-    loadFromStorage(STORAGE_KEYS.settings, INITIAL_SETTINGS),
-  );
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const stored = loadFromStorage(STORAGE_KEYS.settings, INITIAL_SETTINGS);
+    if (!stored.categories) return { ...stored, categories: DEFAULT_CATEGORIES };
+    return stored;
+  });
 
   const [transactions, setTransactions] = useState<Transaction[]>(() =>
     loadFromStorage(STORAGE_KEYS.transactions, generateInitialTransactions(INITIAL_SETTINGS)),

@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import type { CategoryDefinition } from '../types';
 import { formatCurrency, calculate702010 } from '../utils/calculations';
 import { Save, RotateCcw, Plus, X, AlertTriangle } from 'lucide-react';
 
+const COLOR_PALETTE = [
+  '#1565C0', '#7C3AED', '#dc2626', '#16a34a',
+  '#ea580c', '#ca8a04', '#0891b2', '#db2777',
+  '#475569', '#0f766e', '#9333ea', '#e11d48',
+  '#f97316', '#0d9488', '#d97706', '#64748b',
+];
+
 export const Settings: React.FC = () => {
-  const { settings, updateSettings, resetAllData } = useApp();
+  const { settings, updateSettings, resetAllData, transactions } = useApp();
   const [localSettings, setLocalSettings] = useState({ ...settings });
   const [newAccount, setNewAccount] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryColor, setNewCategoryColor] = useState('#1565C0');
   const [saved, setSaved] = useState(false);
   const [showReset, setShowReset] = useState(false);
 
@@ -28,6 +38,20 @@ export const Settings: React.FC = () => {
 
   const removeAccount = (acc: string) => {
     setLocalSettings(s => ({ ...s, accounts: s.accounts.filter(a => a !== acc) }));
+  };
+
+  const addCategory = () => {
+    const label = newCategoryName.trim();
+    if (!label) return;
+    if (localSettings.categories.some(c => c.label.toLowerCase() === label.toLowerCase())) return;
+    const id = `custom-${Date.now()}`;
+    const newCat: CategoryDefinition = { id, label, color: newCategoryColor };
+    setLocalSettings(s => ({ ...s, categories: [...s.categories, newCat] }));
+    setNewCategoryName('');
+  };
+
+  const removeCategory = (id: string) => {
+    setLocalSettings(s => ({ ...s, categories: s.categories.filter(c => c.id !== id) }));
   };
 
   const upd = (field: string, value: unknown) => {
@@ -57,7 +81,7 @@ export const Settings: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Salário FAB (R$)</label>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Salário (R$)</label>
             <input
               type="number" min="0" step="0.01"
               value={localSettings.salarioFAB}
@@ -81,14 +105,14 @@ export const Settings: React.FC = () => {
         <div className="bg-slate-50 rounded-lg p-3">
           <p className="text-xs font-semibold text-slate-600">13º Salário (calculado automaticamente)</p>
           <p className="text-xs text-slate-500 mt-1">
-            Junho e Dezembro: 50% do sal. FAB ({formatCurrency(localSettings.salarioFAB / 2)}) + 50% da pensão ({formatCurrency(localSettings.pensao / 2)}) = {formatCurrency((localSettings.salarioFAB + localSettings.pensao) / 2)}
+            Junho e Dezembro: 50% do salário ({formatCurrency(localSettings.salarioFAB / 2)}) + 50% da pensão ({formatCurrency(localSettings.pensao / 2)}) = {formatCurrency((localSettings.salarioFAB + localSettings.pensao) / 2)}
           </p>
         </div>
       </div>
 
       {/* Regra 70/20/10 */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3">Regra de Distribuição do Salário FAB</h3>
+        <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3">Regra de Distribuição do Salário</h3>
 
         <div className="grid grid-cols-3 gap-4">
           {[
@@ -158,6 +182,79 @@ export const Settings: React.FC = () => {
         </div>
       </div>
 
+      {/* Categorias */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3">Categorias</h3>
+
+        <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+          {localSettings.categories.map(cat => {
+            const usageCount = transactions.filter(t => t.category === cat.id).length;
+            return (
+              <div key={cat.id} className="flex items-center justify-between py-1.5 px-1 rounded-lg hover:bg-slate-50">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                  <span className="text-sm text-slate-700 truncate">{cat.label}</span>
+                  {usageCount > 0 && (
+                    <span className="text-xs text-slate-400 flex-shrink-0">
+                      {usageCount} uso{usageCount !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+                {usageCount === 0 && (
+                  <button
+                    onClick={() => removeCategory(cat.id)}
+                    className="text-slate-300 hover:text-red-500 transition-colors flex-shrink-0 ml-2"
+                    title="Excluir categoria"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="border-t border-slate-100 pt-4 space-y-3">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Cor</p>
+            <div className="flex flex-wrap gap-2">
+              {COLOR_PALETTE.map(color => (
+                <button
+                  key={color}
+                  onClick={() => setNewCategoryColor(color)}
+                  className={`w-6 h-6 rounded-full transition-all ${
+                    newCategoryColor === color
+                      ? 'ring-2 ring-offset-1 ring-slate-600 scale-110'
+                      : 'hover:scale-110'
+                  }`}
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="flex gap-2 items-center">
+            <div className="w-5 h-5 rounded-full flex-shrink-0" style={{ backgroundColor: newCategoryColor }} />
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={e => setNewCategoryName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addCategory()}
+              placeholder="Nome da categoria..."
+              className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={addCategory}
+              disabled={!newCategoryName.trim()}
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-white flex items-center gap-1 hover:opacity-90 transition-colors disabled:opacity-50"
+              style={{ backgroundColor: '#1565C0' }}
+            >
+              <Plus size={14} /> Adicionar
+            </button>
+          </div>
+          <p className="text-xs text-slate-400">Categorias em uso não podem ser excluídas.</p>
+        </div>
+      </div>
+
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-3">
         <button
@@ -205,10 +302,10 @@ export const Settings: React.FC = () => {
         <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">Sobre o App</h3>
         <div className="space-y-1 text-xs text-slate-500">
           <p>• Dados salvos localmente no navegador (localStorage)</p>
-          <p>• Período de controle: Maio a Dezembro de 2025</p>
-          <p>• Regra 70/20/10 aplicada apenas sobre o Salário FAB</p>
+          <p>• Período de controle: Maio a Dezembro de 2026</p>
+          <p>• Regra 70/20/10 aplicada apenas sobre o Salário</p>
           <p>• Exportação disponível em formato CSV</p>
-          <p>• Desenvolvido para cadetes da Força Aérea Brasileira 🛩️</p>
+          <p>• Desenvolvido para Leonardo 🛩️</p>
         </div>
       </div>
     </div>

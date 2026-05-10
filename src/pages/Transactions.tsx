@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import type { Transaction, TransactionType, MoneySource, Category, PaymentMethod, Month } from '../types';
+import type { Transaction, TransactionType, MoneySource, PaymentMethod, Month } from '../types';
 import {
   MONTHS, MONTH_LABELS, TRANSACTION_TYPE_LABELS, MONEY_SOURCE_LABELS,
-  CATEGORY_LABELS, PAYMENT_METHOD_LABELS,
+  PAYMENT_METHOD_LABELS,
 } from '../types';
 import { formatCurrency, formatDate, exportToCSV } from '../utils/calculations';
 import { Modal } from '../components/ui/Modal';
@@ -27,19 +27,22 @@ const EMPTY_FORM: Omit<Transaction, 'id'> = {
 };
 
 export const Transactions: React.FC = () => {
-  const { transactions, addTransaction, updateTransaction, deleteTransaction, settings, currentMonth } = useApp();
+  const { transactions, addTransaction, updateTransaction, deleteTransaction, settings, currentMonth, setCurrentMonth } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Transaction, 'id'>>(EMPTY_FORM);
   const [search, setSearch] = useState('');
-  const [filterMonth, setFilterMonth] = useState<Month | 'todos'>('todos');
   const [filterType, setFilterType] = useState<TransactionType | 'todos'>('todos');
   const [filterStatus, setFilterStatus] = useState<'pago' | 'pendente' | 'todos'>('todos');
+
+  const handleFilterMonth = (month: Month) => {
+    setCurrentMonth(month);
+  };
 
   const filtered = useMemo(() => {
     return transactions
       .filter(t => {
-        if (filterMonth !== 'todos' && t.month !== filterMonth) return false;
+        if (t.month !== currentMonth) return false;
         if (filterType !== 'todos' && t.type !== filterType) return false;
         if (filterStatus !== 'todos' && t.status !== filterStatus) return false;
         if (search && !t.description.toLowerCase().includes(search.toLowerCase())) return false;
@@ -50,7 +53,7 @@ export const Transactions: React.FC = () => {
         if (mOrder !== 0) return mOrder;
         return b.date.localeCompare(a.date);
       });
-  }, [transactions, filterMonth, filterType, filterStatus, search]);
+  }, [transactions, currentMonth, filterType, filterStatus, search]);
 
   const openAdd = () => {
     setEditingId(null);
@@ -83,7 +86,16 @@ export const Transactions: React.FC = () => {
   };
 
   const upd = (field: keyof Omit<Transaction, 'id'>, value: string | number | boolean) => {
-    setForm(f => ({ ...f, [field]: value }));
+    setForm(f => {
+      const updated = { ...f, [field]: value };
+      if (field === 'realizedValue' && (value as number) > 0) {
+        updated.status = 'pago';
+      }
+      if (field === 'type' && value !== 'despesa-fixa') {
+        updated.plannedValue = 0;
+      }
+      return updated;
+    });
   };
 
   const totalFiltered = filtered.reduce((sum, t) => {
@@ -113,9 +125,8 @@ export const Transactions: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <select value={filterMonth} onChange={e => setFilterMonth(e.target.value as Month | 'todos')}
+          <select value={currentMonth} onChange={e => handleFilterMonth(e.target.value as Month)}
             className="px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="todos">Todos os meses</option>
             {MONTHS.map(m => <option key={m} value={m}>{MONTH_LABELS[m]}</option>)}
           </select>
 
@@ -213,7 +224,7 @@ export const Transactions: React.FC = () => {
       {/* Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
         title={editingId ? 'Editar Lançamento' : 'Novo Lançamento'} size="lg">
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4" onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && form.description.trim()) handleSave(); }}>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Mês *</label>
@@ -260,10 +271,10 @@ export const Transactions: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Categoria</label>
-              <select value={form.category} onChange={e => upd('category', e.target.value as Category)}
+              <select value={form.category} onChange={e => upd('category', e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                {(Object.entries(CATEGORY_LABELS) as [Category, string][]).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
+                {settings.categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.label}</option>
                 ))}
               </select>
             </div>
@@ -277,13 +288,15 @@ export const Transactions: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Valor Previsto (R$)</label>
-              <input type="number" min="0" step="0.01" value={form.plannedValue}
-                onChange={e => upd('plannedValue', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
+          <div className={`grid gap-4 ${form.type === 'despesa-fixa' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {form.type === 'despesa-fixa' && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Valor Previsto (R$)</label>
+                <input type="number" min="0" step="0.01" value={form.plannedValue}
+                  onChange={e => upd('plannedValue', parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            )}
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Valor Realizado (R$)</label>
               <input type="number" min="0" step="0.01" value={form.realizedValue}

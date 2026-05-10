@@ -4,7 +4,7 @@ import {
   getMonthIncome, getMonthExpenses, getMonthInvested, getMonthBalance,
   getRegra702010Usage, calculate702010, generateAlerts, formatCurrency,
 } from '../utils/calculations';
-import { MONTH_LABELS, CATEGORY_LABELS } from '../types';
+import { MONTH_LABELS, getCategoryLabel } from '../types';
 import { AlertBadge, StatusBadge, TypeBadge } from '../components/ui/Badge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import {
@@ -60,7 +60,7 @@ export const Dashboard: React.FC = () => {
     transactions
       .filter(t => t.month === currentMonth && expTypes.includes(t.type as any))
       .forEach(t => {
-        const label = CATEGORY_LABELS[t.category] || t.category;
+        const label = getCategoryLabel(t.category, settings.categories);
         categoryMap[label] = (categoryMap[label] || 0) + (t.realizedValue || t.plannedValue);
       });
     return Object.entries(categoryMap)
@@ -78,7 +78,7 @@ export const Dashboard: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">
-            {MONTH_LABELS[currentMonth]} 2025
+            {MONTH_LABELS[currentMonth]} 2026
           </h2>
           <p className="text-sm text-slate-500 mt-0.5">Visão geral das suas finanças</p>
         </div>
@@ -117,11 +117,11 @@ export const Dashboard: React.FC = () => {
           trend="neutral"
         />
         <StatCard
-          title="Investido / Reserva"
+          title="Investido"
           value={formatCurrency(invested)}
           subtitle={`Meta: ${formatCurrency(limits.investimento)}`}
           icon={<PiggyBank size={22} className="text-white" />}
-          color="bg-purple-600"
+          color="bg-green-600"
           trend={invested >= limits.investimento ? 'up' : 'neutral'}
         />
         <StatCard
@@ -134,14 +134,46 @@ export const Dashboard: React.FC = () => {
         />
       </div>
 
-      {/* Receita breakdown */}
+      {/* Composição da receita */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <p className="text-sm font-bold text-slate-800 mb-4">Composição da Receita — {MONTH_LABELS[currentMonth]}</p>
+        <div className="space-y-3">
+          {[
+            { label: 'Salário', value: income.salarioFAB, color: '#1565C0' },
+            { label: 'Pensão', value: income.pensao, color: '#7C3AED' },
+            ...(income.decimoTerceiro > 0 ? [{ label: '13º Salário', value: income.decimoTerceiro, color: '#D4AF37' }] : []),
+            ...(income.extra > 0 ? [{ label: 'Extra', value: income.extra, color: '#22c55e' }] : []),
+          ].map(item => (
+            <div key={item.label} className="flex items-center gap-3">
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+              <span className="text-xs font-semibold text-slate-600 w-24 flex-shrink-0">{item.label}</span>
+              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${income.total > 0 ? (item.value / income.total) * 100 : 0}%`, backgroundColor: item.color }} />
+              </div>
+              <span className="text-xs font-bold text-slate-700 w-24 text-right flex-shrink-0">{formatCurrency(item.value)}</span>
+              <span className="text-xs text-slate-400 w-8 text-right flex-shrink-0">
+                {income.total > 0 ? ((item.value / income.total) * 100).toFixed(0) : 0}%
+              </span>
+            </div>
+          ))}
+        </div>
+        {income.extra > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 text-green-700">
+            <span className="text-base">💰</span>
+            <p className="text-xs font-semibold">Receita extra de {formatCurrency(income.extra)} registrada este mês!</p>
+          </div>
+        )}
+      </div>
+
+      {/* 13º destaque */}
       {income.decimoTerceiro > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
           <span className="text-2xl">🎉</span>
           <div>
             <p className="text-sm font-bold text-amber-800">13º Salário em {MONTH_LABELS[currentMonth]}!</p>
             <p className="text-xs text-amber-700">
-              FAB: {formatCurrency(settings.salarioFAB / 2)} + Pensão: {formatCurrency(settings.pensao / 2)} = {formatCurrency(income.decimoTerceiro)}
+              Salário: {formatCurrency(settings.salarioFAB / 2)} + Pensão: {formatCurrency(settings.pensao / 2)} = {formatCurrency(income.decimoTerceiro)}
             </p>
           </div>
         </div>
@@ -155,7 +187,7 @@ export const Dashboard: React.FC = () => {
               style={{ backgroundColor: '#1565C0' }}>70</div>
             <div>
               <p className="text-sm font-bold text-slate-800">Regra 70/20/10</p>
-              <p className="text-xs text-slate-500">Somente sobre o Salário FAB</p>
+              <p className="text-xs text-slate-500">Somente sobre o Salário</p>
             </div>
           </div>
 
@@ -268,8 +300,11 @@ export const Dashboard: React.FC = () => {
                     <TypeBadge type={t.type} />
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className={`text-sm font-bold ${t.type === 'receita' ? 'text-green-600' : 'text-red-600'}`}>
-                      {t.type === 'receita' ? '+' : '-'}{formatCurrency(t.realizedValue || t.plannedValue)}
+                    <p className={`text-sm font-bold ${
+                      t.type === 'receita' || t.type === 'extra' || t.type === 'investimento'
+                        ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {t.type === 'receita' || t.type === 'extra' || t.type === 'investimento' ? '+' : '-'}{formatCurrency(t.realizedValue || t.plannedValue)}
                     </p>
                     <StatusBadge status={t.status} />
                   </div>

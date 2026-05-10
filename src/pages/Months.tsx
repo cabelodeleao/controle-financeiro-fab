@@ -5,7 +5,7 @@ import {
   getRegra702010Usage, calculate702010, formatCurrency, formatDate,
 } from '../utils/calculations';
 import type { TransactionType } from '../types';
-import { MONTHS, MONTH_LABELS, CATEGORY_LABELS } from '../types';
+import { MONTHS, MONTH_LABELS, getCategoryLabel } from '../types';
 import { StatusBadge, TypeBadge } from '../components/ui/Badge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { CheckCircle, Clock, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
@@ -37,7 +37,7 @@ export const Months: React.FC = () => {
     monthTransactions
       .filter(t => expTypes.includes(t.type))
       .forEach(t => {
-        const label = CATEGORY_LABELS[t.category];
+        const label = getCategoryLabel(t.category, settings.categories);
         map[label] = (map[label] || 0) + (t.realizedValue || t.plannedValue);
       });
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
@@ -195,7 +195,7 @@ export const Months: React.FC = () => {
                   <td className="px-4 py-3 text-xs text-slate-500">{formatDate(t.date)}</td>
                   <td className="px-4 py-3">
                     <p className="font-semibold text-slate-800">{t.description}</p>
-                    <p className="text-xs text-slate-400">{CATEGORY_LABELS[t.category]}</p>
+                    <p className="text-xs text-slate-400">{getCategoryLabel(t.category, settings.categories)}</p>
                   </td>
                   <td className="px-4 py-3"><TypeBadge type={t.type} /></td>
                   <td className="px-4 py-3 text-right text-xs text-slate-500 font-mono">{formatCurrency(t.plannedValue)}</td>

@@ -4,7 +4,7 @@ import {
   getMonthIncome, getMonthExpenses, getMonthInvested, getMonthBalance,
   calculate702010, getRegra702010Usage, formatCurrency,
 } from '../utils/calculations';
-import { MONTHS, MONTH_LABELS, CATEGORY_LABELS } from '../types';
+import { MONTHS, MONTH_LABELS, getCategoryLabel } from '../types';
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -37,7 +37,7 @@ export const Charts: React.FC = () => {
     transactions
       .filter(t => ['despesa-fixa', 'despesa-variavel', 'lazer', 'divida'].includes(t.type))
       .forEach(t => {
-        const label = CATEGORY_LABELS[t.category];
+        const label = getCategoryLabel(t.category, settings.categories);
         map[label] = (map[label] || 0) + (t.realizedValue || t.plannedValue);
       });
     return Object.entries(map)
@@ -74,7 +74,7 @@ export const Charts: React.FC = () => {
     const inc = getMonthIncome(transactions, month, settings);
     return {
       month: MONTH_LABELS[month].slice(0, 3),
-      'Sal. FAB': inc.salarioFAB,
+      'Salário': inc.salarioFAB,
       'Pensão': inc.pensao,
       '13º': inc.decimoTerceiro,
     };
@@ -179,7 +179,7 @@ export const Charts: React.FC = () => {
         {/* 70/20/10 */}
         <ChartCard
           title={`Regra 70/20/10 — ${MONTH_LABELS[currentMonth]}`}
-          subtitle="Previsto × Realizado do salário FAB">
+          subtitle="Previsto × Realizado do salário">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={usage702010} layout="vertical" margin={{ left: 20, right: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
@@ -196,7 +196,7 @@ export const Charts: React.FC = () => {
         </ChartCard>
 
         {/* Origem da receita */}
-        <ChartCard title="Composição da Receita por Mês" subtitle="Salário FAB, Pensão e 13º">
+        <ChartCard title="Composição da Receita por Mês" subtitle="Salário, Pensão e 13º">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={incomeBreakdown} margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -204,7 +204,7 @@ export const Charts: React.FC = () => {
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `R$${(v / 1000).toFixed(1)}k`} />
               <Tooltip formatter={currency} />
               <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
-              <Bar dataKey="Sal. FAB" stackId="a" fill="#1565C0" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="Salário" stackId="a" fill="#1565C0" radius={[0, 0, 0, 0]} />
               <Bar dataKey="Pensão" stackId="a" fill="#7c3aed" radius={[0, 0, 0, 0]} />
               <Bar dataKey="13º" stackId="a" fill="#D4AF37" radius={[4, 4, 0, 0]} />
             </BarChart>

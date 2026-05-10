@@ -19,7 +19,7 @@ export const MONTH_NUMBERS: Record<Month, number> = {
 
 export type TransactionType =
   | 'receita' | 'despesa-fixa' | 'despesa-variavel'
-  | 'lazer' | 'investimento' | 'reserva' | 'divida' | 'extra';
+  | 'lazer' | 'investimento' | 'divida' | 'extra';
 
 export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
   'receita': 'Receita',
@@ -27,7 +27,6 @@ export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
   'despesa-variavel': 'Despesa Variável',
   'lazer': 'Lazer e Estilo de Vida',
   'investimento': 'Investimento',
-  'reserva': 'Reserva',
   'divida': 'Dívida',
   'extra': 'Extra',
 };
@@ -38,9 +37,8 @@ export const TRANSACTION_TYPE_COLORS: Record<TransactionType, string> = {
   'despesa-variavel': '#f97316',
   'lazer': '#8b5cf6',
   'investimento': '#3b82f6',
-  'reserva': '#06b6d4',
   'divida': '#dc2626',
-  'extra': '#64748b',
+  'extra': '#22c55e',
 };
 
 export type MoneySource =
@@ -48,53 +46,59 @@ export type MoneySource =
   | 'decimo-terceiro-fab' | 'decimo-terceiro-pensao' | 'extra';
 
 export const MONEY_SOURCE_LABELS: Record<MoneySource, string> = {
-  'salario-fab': 'Salário FAB',
+  'salario-fab': 'Salário',
   'pensao': 'Pensão',
-  'decimo-terceiro-fab': '13º Salário FAB',
+  'decimo-terceiro-fab': '13º Salário',
   'decimo-terceiro-pensao': '13º Pensão',
   'extra': 'Extra',
 };
 
-export type Category =
-  | 'salario-fab' | 'pensao' | 'decimo-terceiro'
-  | 'comissao-formatura' | 'lavanderia' | 'telefone'
-  | 'assinatura-gpt' | 'cedula-afa' | 'cartao-credito'
-  | 'cachorra' | 'manutencao-carro' | 'moradia'
-  | 'alimentacao' | 'transporte' | 'saude'
-  | 'estudos' | 'lazer' | 'investimento' | 'reserva' | 'outros';
+export type Category = string;
 
-export const CATEGORY_LABELS: Record<Category, string> = {
-  'salario-fab': 'Salário FAB',
-  'pensao': 'Pensão',
-  'decimo-terceiro': '13º Salário',
-  'comissao-formatura': 'Comissão de Formatura',
-  'lavanderia': 'Lavanderia',
-  'telefone': 'Telefone',
-  'assinatura-gpt': 'Assinatura GPT',
-  'cedula-afa': 'Cédula AFA',
-  'cartao-credito': 'Cartão de Crédito',
-  'cachorra': 'Cachorra',
-  'manutencao-carro': 'Manutenção do Carro',
-  'moradia': 'Moradia',
-  'alimentacao': 'Alimentação',
-  'transporte': 'Transporte',
-  'saude': 'Saúde',
-  'estudos': 'Estudos',
-  'lazer': 'Lazer',
-  'investimento': 'Investimento',
-  'reserva': 'Reserva',
-  'outros': 'Outros',
-};
+export interface CategoryDefinition {
+  id: string;
+  label: string;
+  color: string;
+}
 
-export const CATEGORY_COLORS: Record<Category, string> = {
-  'salario-fab': '#1565C0', 'pensao': '#7C3AED', 'decimo-terceiro': '#0891b2',
-  'comissao-formatura': '#dc2626', 'lavanderia': '#ea580c', 'telefone': '#ca8a04',
-  'assinatura-gpt': '#16a34a', 'cedula-afa': '#9333ea', 'cartao-credito': '#e11d48',
-  'cachorra': '#d97706', 'manutencao-carro': '#475569', 'moradia': '#0f766e',
-  'alimentacao': '#c2410c', 'transporte': '#1d4ed8', 'saude': '#0d9488',
-  'estudos': '#7c3aed', 'lazer': '#db2777', 'investimento': '#2563eb',
-  'reserva': '#0284c7', 'outros': '#64748b',
-};
+export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
+  { id: 'salario-fab', label: 'Salário', color: '#1565C0' },
+  { id: 'pensao', label: 'Pensão', color: '#7C3AED' },
+  { id: 'decimo-terceiro', label: '13º Salário', color: '#0891b2' },
+  { id: 'comissao-formatura', label: 'Comissão de Formatura', color: '#dc2626' },
+  { id: 'lavanderia', label: 'Lavanderia', color: '#ea580c' },
+  { id: 'telefone', label: 'Telefone', color: '#ca8a04' },
+  { id: 'assinatura-gpt', label: 'Assinatura GPT', color: '#16a34a' },
+  { id: 'cedula-afa', label: 'Cédula AFA', color: '#9333ea' },
+  { id: 'cartao-credito', label: 'Cartão de Crédito', color: '#e11d48' },
+  { id: 'cachorra', label: 'Cachorra', color: '#d97706' },
+  { id: 'manutencao-carro', label: 'Manutenção do Carro', color: '#475569' },
+  { id: 'moradia', label: 'Moradia', color: '#0f766e' },
+  { id: 'alimentacao', label: 'Alimentação', color: '#c2410c' },
+  { id: 'transporte', label: 'Transporte', color: '#1d4ed8' },
+  { id: 'saude', label: 'Saúde', color: '#0d9488' },
+  { id: 'estudos', label: 'Estudos', color: '#7c3aed' },
+  { id: 'lazer', label: 'Lazer', color: '#db2777' },
+  { id: 'investimento', label: 'Investimento', color: '#2563eb' },
+  { id: 'reserva', label: 'Reserva', color: '#0284c7' },
+  { id: 'outros', label: 'Outros', color: '#64748b' },
+];
+
+export const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  DEFAULT_CATEGORIES.map(c => [c.id, c.label])
+);
+
+export const CATEGORY_COLORS: Record<string, string> = Object.fromEntries(
+  DEFAULT_CATEGORIES.map(c => [c.id, c.color])
+);
+
+export function getCategoryLabel(id: string, categories: CategoryDefinition[]): string {
+  return categories.find(c => c.id === id)?.label ?? id;
+}
+
+export function getCategoryColor(id: string, categories: CategoryDefinition[]): string {
+  return categories.find(c => c.id === id)?.color ?? '#64748b';
+}
 
 export type PaymentMethod =
   | 'dinheiro' | 'pix' | 'cartao-debito'
@@ -117,7 +121,7 @@ export interface Transaction {
   description: string;
   type: TransactionType;
   source: MoneySource;
-  category: Category;
+  category: string;
   plannedValue: number;
   realizedValue: number;
   paymentMethod: PaymentMethod;
@@ -134,7 +138,7 @@ export interface RecurringExpense {
   name: string;
   type: TransactionType;
   source: MoneySource;
-  category: Category;
+  category: string;
   plannedValue: number;
   dueDay: number;
   months: Month[];
@@ -151,6 +155,7 @@ export interface AppSettings {
     investimento: number;
   };
   accounts: string[];
+  categories: CategoryDefinition[];
 }
 
 export interface Alert {

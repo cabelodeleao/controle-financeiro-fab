@@ -16,18 +16,17 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => (
 
 interface TypeBadgeProps { type: TransactionType; }
 export const TypeBadge: React.FC<TypeBadgeProps> = ({ type }) => {
-  const colorMap: Record<TransactionType, string> = {
+  const colorMap: Partial<Record<string, string>> = {
     'receita': 'bg-green-100 text-green-700',
     'despesa-fixa': 'bg-red-100 text-red-700',
     'despesa-variavel': 'bg-orange-100 text-orange-700',
     'lazer': 'bg-purple-100 text-purple-700',
     'investimento': 'bg-blue-100 text-blue-700',
-    'reserva': 'bg-cyan-100 text-cyan-700',
     'divida': 'bg-rose-100 text-rose-700',
-    'extra': 'bg-slate-100 text-slate-600',
+    'extra': 'bg-green-100 text-green-700',
   };
   return (
-    <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${colorMap[type]}`}>
+    <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${colorMap[type] ?? 'bg-slate-100 text-slate-600'}`}>
       {TRANSACTION_TYPE_LABELS[type]}
     </span>
   );

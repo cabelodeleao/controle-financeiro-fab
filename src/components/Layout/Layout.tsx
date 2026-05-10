@@ -87,8 +87,8 @@ export const Layout: React.FC<LayoutProps> = ({ currentPage, onNavigate, childre
           {/* FAB emblem */}
           <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-slate-200">
             <div className="text-right">
-              <p className="text-xs font-bold text-slate-700 leading-none">FAB</p>
-              <p className="text-xs text-slate-400 leading-none">2025</p>
+              <p className="text-xs font-bold text-slate-700 leading-none">Leonardo</p>
+              <p className="text-xs text-slate-400 leading-none">2026</p>
             </div>
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
               style={{ background: 'linear-gradient(135deg, #1565C0, #0a1628)' }}>

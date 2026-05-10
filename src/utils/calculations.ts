@@ -23,7 +23,7 @@ export const calculate702010 = (salarioFAB: number, percentages: AppSettings['re
 });
 
 export const getMonthIncome = (transactions: Transaction[], month: Month, settings: AppSettings) => {
-  const monthTxs = transactions.filter(t => t.month === month && t.type === 'receita');
+  const monthTxs = transactions.filter(t => t.month === month && (t.type === 'receita' || t.type === 'extra'));
   const salarioFAB = monthTxs
     .filter(t => t.source === 'salario-fab')
     .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0) || settings.salarioFAB;
@@ -40,7 +40,7 @@ export const getMonthIncome = (transactions: Transaction[], month: Month, settin
 };
 
 export const getMonthExpenses = (transactions: Transaction[], month: Month) => {
-  const expTypes: TransactionType[] = ['despesa-fixa', 'despesa-variavel', 'lazer', 'divida', 'extra'];
+  const expTypes: TransactionType[] = ['despesa-fixa', 'despesa-variavel', 'lazer', 'divida'];
   const monthExpenses = transactions.filter(t => t.month === month && expTypes.includes(t.type));
   const paid = monthExpenses.filter(t => t.status === 'pago').reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0);
   const pending = monthExpenses.filter(t => t.status === 'pendente').reduce((s, t) => s + t.plannedValue, 0);
@@ -50,7 +50,7 @@ export const getMonthExpenses = (transactions: Transaction[], month: Month) => {
 
 export const getMonthInvested = (transactions: Transaction[], month: Month) => {
   return transactions
-    .filter(t => t.month === month && (t.type === 'investimento' || t.type === 'reserva'))
+    .filter(t => t.month === month && t.type === 'investimento')
     .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0);
 };
 
@@ -87,7 +87,7 @@ export const getRegra702010Usage = (transactions: Transaction[], month: Month, s
     .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0);
 
   const investimento = monthTxs
-    .filter(t => t.type === 'investimento' || t.type === 'reserva')
+    .filter(t => t.type === 'investimento')
     .reduce((s, t) => s + (t.realizedValue || t.plannedValue), 0);
 
   return { essenciais, lazer, investimento, limits };
@@ -129,7 +129,7 @@ export const generateAlerts = (
   if (cartaoTx) {
     const pct = ((cartaoTx.realizedValue || cartaoTx.plannedValue) / settings.salarioFAB) * 100;
     if (pct > 30) {
-      alerts.push({ id: 'cartao', type: 'warning', message: `A fatura do cartão representa ${pct.toFixed(0)}% do seu salário FAB neste mês` });
+      alerts.push({ id: 'cartao', type: 'warning', message: `A fatura do cartão representa ${pct.toFixed(0)}% do seu salário neste mês` });
     }
   }
 
@@ -179,6 +179,21 @@ export const getAnnualSummary = (transactions: Transaction[], settings: AppSetti
   };
 };
 
+const FIRST_BUSINESS_DAYS_2026: Partial<Record<Month, string>> = {
+  janeiro:   '2026-01-02',
+  fevereiro: '2026-02-02',
+  março:     '2026-03-02',
+  abril:     '2026-04-01',
+  maio:      '2026-05-04',
+  junho:     '2026-06-01',
+  julho:     '2026-07-01',
+  agosto:    '2026-08-03',
+  setembro:  '2026-09-01',
+  outubro:   '2026-10-01',
+  novembro:  '2026-11-03',
+  dezembro:  '2026-12-01',
+};
+
 export const generateRecurringForMonth = (
   recurringExpenses: RecurringExpense[],
   existingTransactions: Transaction[],
@@ -192,7 +207,7 @@ export const generateRecurringForMonth = (
   return activeExpenses
     .filter(e => !existingRecurringIds.has(e.id))
     .map(e => ({
-      date: '',
+      date: FIRST_BUSINESS_DAYS_2026[month] ?? '',
       description: e.name,
       type: e.type,
       source: e.source,

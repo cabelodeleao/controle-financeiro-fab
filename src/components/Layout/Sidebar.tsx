@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, colla
         {!collapsed && (
           <div className="overflow-hidden">
             <p className="text-xs font-bold text-white leading-tight">CONTROLE</p>
-            <p className="text-xs font-bold leading-tight" style={{ color: '#D4AF37' }}>FINANCEIRO FAB</p>
+            <p className="text-xs font-bold leading-tight" style={{ color: '#D4AF37' }}>FINANCEIRO</p>
           </div>
         )}
         <button
@@ -89,11 +89,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, colla
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
               style={{ backgroundColor: '#1565C0', color: '#fff' }}>
-              CAD
+              L
             </div>
             <div>
-              <p className="text-xs font-semibold text-white">Cadete FAB</p>
-              <p className="text-xs text-white/50">2025 · 2026</p>
+              <p className="text-xs font-semibold text-white">Leonardo</p>
+              <p className="text-xs text-white/50">2026</p>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import type { RecurringExpense, TransactionType, MoneySource, Category, Month } from '../types';
-import { MONTHS, MONTH_LABELS, TRANSACTION_TYPE_LABELS, MONEY_SOURCE_LABELS, CATEGORY_LABELS } from '../types';
+import type { RecurringExpense, TransactionType, MoneySource, Month, CategoryDefinition } from '../types';
+import { MONTHS, MONTH_LABELS, TRANSACTION_TYPE_LABELS, MONEY_SOURCE_LABELS, getCategoryLabel } from '../types';
 import { formatCurrency } from '../utils/calculations';
 import { Modal } from '../components/ui/Modal';
 import { TypeBadge } from '../components/ui/Badge';
@@ -20,7 +20,7 @@ const EMPTY_FORM: Omit<RecurringExpense, 'id'> = {
 };
 
 export const Planning: React.FC = () => {
-  const { recurringExpenses, addRecurringExpense, updateRecurringExpense, deleteRecurringExpense, generateRecurringForCurrentMonth, currentMonth } = useApp();
+  const { recurringExpenses, addRecurringExpense, updateRecurringExpense, deleteRecurringExpense, generateRecurringForCurrentMonth, currentMonth, settings } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<RecurringExpense, 'id'>>(EMPTY_FORM);
@@ -121,10 +121,11 @@ export const Planning: React.FC = () => {
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#1565C0' }} />
-          <h3 className="text-sm font-bold text-slate-800">Gastos do Salário FAB</h3>
+          <h3 className="text-sm font-bold text-slate-800">Gastos do Salário</h3>
         </div>
         <RecurringTable
           expenses={recurringExpenses.filter(e => e.source === 'salario-fab')}
+          categories={settings.categories}
           onEdit={openEdit} onDelete={handleDelete} onToggle={toggleActive}
         />
       </div>
@@ -176,10 +177,10 @@ export const Planning: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Categoria</label>
-              <select value={form.category} onChange={e => upd('category', e.target.value as Category)}
+              <select value={form.category} onChange={e => upd('category', e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                {(Object.entries(CATEGORY_LABELS) as [Category, string][]).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
+                {settings.categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.label}</option>
                 ))}
               </select>
             </div>
@@ -254,10 +255,11 @@ export const Planning: React.FC = () => {
 
 const RecurringTable: React.FC<{
   expenses: RecurringExpense[];
+  categories: CategoryDefinition[];
   onEdit: (e: RecurringExpense) => void;
   onDelete: (id: string) => void;
   onToggle: (e: RecurringExpense) => void;
-}> = ({ expenses, onEdit, onDelete, onToggle }) => (
+}> = ({ expenses, categories, onEdit, onDelete, onToggle }) => (
   <div className="overflow-x-auto">
     <table className="w-full text-sm">
       <thead>
@@ -291,7 +293,7 @@ const RecurringTable: React.FC<{
               {e.observations && <p className="text-xs text-slate-400">{e.observations}</p>}
             </td>
             <td className="px-4 py-3"><TypeBadge type={e.type} /></td>
-            <td className="px-4 py-3 text-xs text-slate-600">{CATEGORY_LABELS[e.category]}</td>
+            <td className="px-4 py-3 text-xs text-slate-600">{getCategoryLabel(e.category, categories)}</td>
             <td className="px-4 py-3 text-xs text-slate-500 flex items-center gap-1">
               <Calendar size={12} /> Dia {e.dueDay}
             </td>

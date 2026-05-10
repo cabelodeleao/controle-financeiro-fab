@@ -30,7 +30,7 @@ export const AnnualSummary: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Resumo Anual 2025</h2>
+          <h2 className="text-2xl font-bold text-slate-800">Resumo Anual 2026</h2>
           <p className="text-sm text-slate-500 mt-0.5">Período: Maio a Dezembro</p>
         </div>
         <button
@@ -63,7 +63,7 @@ export const AnnualSummary: React.FC = () => {
       {/* Receita breakdown */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Total Salário FAB', value: summary.totalSalarioFAB, emoji: '🎖️' },
+          { label: 'Total Salário', value: summary.totalSalarioFAB, emoji: '🎖️' },
           { label: 'Total Pensão', value: summary.totalPensao, emoji: '💰' },
           { label: 'Total 13º Salário', value: summary.totalDecimo, emoji: '🎉' },
         ].map(s => (

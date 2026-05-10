@@ -1,11 +1,12 @@
 import type { AppSettings, RecurringExpense, Transaction, Month } from '../types';
-import { MONTHS } from '../types';
+import { MONTHS, DEFAULT_CATEGORIES } from '../types';
 
 export const INITIAL_SETTINGS: AppSettings = {
   salarioFAB: 1516.39,
   pensao: 2000.00,
   regraPorcentagem: { essenciais: 70, lazer: 20, investimento: 10 },
   accounts: ['Conta Principal', 'Poupança', 'Investimento', 'Cartão de Crédito'],
+  categories: DEFAULT_CATEGORIES,
 };
 
 export const INITIAL_RECURRING_EXPENSES: RecurringExpense[] = [
@@ -13,7 +14,7 @@ export const INITIAL_RECURRING_EXPENSES: RecurringExpense[] = [
     id: 'rec-001', name: 'Comissão de Formatura',
     type: 'despesa-fixa', source: 'salario-fab', category: 'comissao-formatura',
     plannedValue: 0, dueDay: 10, months: MONTHS, active: true,
-    observations: 'Desconto automático no salário da FAB',
+    observations: 'Desconto automático no salário',
   },
   {
     id: 'rec-002', name: 'Lavanderia',
@@ -57,22 +58,20 @@ export const INITIAL_RECURRING_EXPENSES: RecurringExpense[] = [
 
 export function generateInitialTransactions(settings: AppSettings): Transaction[] {
   const transactions: Transaction[] = [];
-  const allMonths: Month[] = MONTHS;
 
-  allMonths.forEach((month) => {
-    const salId = `sal-${month}`;
-    const penId = `pen-${month}`;
+  MONTHS.forEach((month) => {
+    const mm = String(getMonthNumber(month)).padStart(2, '0');
 
     transactions.push({
-      id: salId, date: `2025-${String(getMonthNumber(month)).padStart(2, '0')}-10`,
-      description: 'Salário FAB', type: 'receita', source: 'salario-fab',
+      id: `sal-${month}`, date: `2026-${mm}-10`,
+      description: 'Salário', type: 'receita', source: 'salario-fab',
       category: 'salario-fab', plannedValue: settings.salarioFAB,
       realizedValue: settings.salarioFAB, paymentMethod: 'transferencia',
       account: 'Conta Principal', status: 'pago', month, isRecurring: false,
     });
 
     transactions.push({
-      id: penId, date: `2025-${String(getMonthNumber(month)).padStart(2, '0')}-05`,
+      id: `pen-${month}`, date: `2026-${mm}-05`,
       description: 'Pensão', type: 'receita', source: 'pensao',
       category: 'pensao', plannedValue: settings.pensao,
       realizedValue: settings.pensao, paymentMethod: 'transferencia',
@@ -84,8 +83,8 @@ export function generateInitialTransactions(settings: AppSettings): Transaction[
       const mid13Pen = settings.pensao / 2;
 
       transactions.push({
-        id: `13fab-${month}`, date: `2025-${String(getMonthNumber(month)).padStart(2, '0')}-15`,
-        description: '13º Salário FAB (1ª Parcela)', type: 'receita',
+        id: `13fab-${month}`, date: `2026-${mm}-15`,
+        description: '13º Salário (1ª Parcela)', type: 'receita',
         source: 'decimo-terceiro-fab', category: 'decimo-terceiro',
         plannedValue: mid13Fab, realizedValue: mid13Fab,
         paymentMethod: 'transferencia', account: 'Conta Principal',
@@ -93,7 +92,7 @@ export function generateInitialTransactions(settings: AppSettings): Transaction[
       });
 
       transactions.push({
-        id: `13pen-${month}`, date: `2025-${String(getMonthNumber(month)).padStart(2, '0')}-15`,
+        id: `13pen-${month}`, date: `2026-${mm}-15`,
         description: '13º Pensão (1ª Parcela)', type: 'receita',
         source: 'decimo-terceiro-pensao', category: 'decimo-terceiro',
         plannedValue: mid13Pen, realizedValue: mid13Pen,
