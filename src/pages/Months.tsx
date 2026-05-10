@@ -72,7 +72,7 @@ export const Months: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Receita', value: formatCurrency(income.total), color: 'text-blue-600', bg: 'bg-blue-50', icon: <DollarSign size={18} className="text-blue-600" /> },
-          { label: 'Extra', value: formatCurrency(extra), color: 'text-emerald-600', bg: 'bg-emerald-50', icon: <Zap size={18} className="text-emerald-600" /> },
+          { label: 'Extra', value: formatCurrency(extra), color: 'text-purple-600', bg: 'bg-purple-50', icon: <Zap size={18} className="text-purple-600" /> },
           { label: 'Despesas Pagas', value: formatCurrency(expenses.paid), color: 'text-red-600', bg: 'bg-red-50', icon: <TrendingDown size={18} className="text-red-600" /> },
           { label: 'Investido', value: formatCurrency(invested), color: 'text-purple-600', bg: 'bg-purple-50', icon: <TrendingUp size={18} className="text-purple-600" /> },
           { label: 'Saldo Final', value: formatCurrency(balance), color: balance >= 0 ? 'text-green-600' : 'text-red-600', bg: balance >= 0 ? 'bg-green-50' : 'bg-red-50', icon: balance >= 0 ? <CheckCircle size={18} className="text-green-600" /> : <Clock size={18} className="text-red-600" /> },

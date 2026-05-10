@@ -45,7 +45,7 @@ export const AnnualSummary: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Receita Acumulada', value: summary.totalIncome, icon: <DollarSign size={20} />, color: 'bg-blue-600', text: 'text-blue-600' },
-          { label: 'Extra Acumulado', value: summary.totalExtra, icon: <Zap size={20} />, color: 'bg-emerald-500', text: 'text-emerald-600' },
+          { label: 'Extra Acumulado', value: summary.totalExtra, icon: <Zap size={20} />, color: 'bg-purple-600', text: 'text-purple-600' },
           { label: 'Despesas Acumuladas', value: summary.totalExpenses, icon: <TrendingDown size={20} />, color: 'bg-red-500', text: 'text-red-500' },
           { label: 'Total Investido', value: summary.totalInvested, icon: <PiggyBank size={20} />, color: 'bg-purple-600', text: 'text-purple-600' },
           { label: 'Saldo Acumulado', value: summary.accumulatedBalance, icon: <TrendingUp size={20} />, color: summary.accumulatedBalance >= 0 ? 'bg-green-600' : 'bg-red-600', text: summary.accumulatedBalance >= 0 ? 'text-green-600' : 'text-red-600' },
@@ -117,7 +117,7 @@ export const AnnualSummary: React.FC = () => {
             <Tooltip formatter={(v) => formatCurrency(v as number)} />
             <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
             <Bar dataKey="Receita" fill="#22c55e" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="Extra" fill="#10b981" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="Extra" fill="#6366f1" radius={[3, 3, 0, 0]} />
             <Bar dataKey="Despesas" fill="#ef4444" radius={[3, 3, 0, 0]} />
             <Bar dataKey="Investido" fill="#3b82f6" radius={[3, 3, 0, 0]} />
             <Bar dataKey="Saldo" radius={[3, 3, 0, 0]}>
@@ -157,7 +157,7 @@ export const AnnualSummary: React.FC = () => {
                     {m.month === summary.worstMonth.month && <span className="text-xs text-red-600">↓ pior</span>}
                   </td>
                   <td className="px-4 py-3 text-right text-green-600 font-mono font-semibold">{formatCurrency(m.income)}</td>
-                  <td className="px-4 py-3 text-right text-emerald-600 font-mono font-semibold">{m.extra > 0 ? formatCurrency(m.extra) : '—'}</td>
+                  <td className="px-4 py-3 text-right text-purple-600 font-mono font-semibold">{m.extra > 0 ? formatCurrency(m.extra) : '—'}</td>
                   <td className="px-4 py-3 text-right text-red-600 font-mono font-semibold">{formatCurrency(m.expenses)}</td>
                   <td className="px-4 py-3 text-right text-blue-600 font-mono font-semibold">{formatCurrency(m.invested)}</td>
                   <td className={`px-4 py-3 text-right font-mono font-bold ${m.balance >= 0 ? 'text-green-700' : 'text-red-700'}`}>
@@ -168,7 +168,7 @@ export const AnnualSummary: React.FC = () => {
               <tr className="bg-slate-800 text-white">
                 <td className="px-4 py-3 font-bold">TOTAL</td>
                 <td className="px-4 py-3 text-right font-bold font-mono">{formatCurrency(summary.totalIncome)}</td>
-                <td className="px-4 py-3 text-right font-bold font-mono text-emerald-300">{formatCurrency(summary.totalExtra)}</td>
+                <td className="px-4 py-3 text-right font-bold font-mono text-purple-300">{formatCurrency(summary.totalExtra)}</td>
                 <td className="px-4 py-3 text-right font-bold font-mono">{formatCurrency(summary.totalExpenses)}</td>
                 <td className="px-4 py-3 text-right font-bold font-mono">{formatCurrency(summary.totalInvested)}</td>
                 <td className={`px-4 py-3 text-right font-bold font-mono ${summary.accumulatedBalance >= 0 ? 'text-green-400' : 'text-red-400'}`}>

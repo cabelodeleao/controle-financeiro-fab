@@ -23,7 +23,7 @@ export const TypeBadge: React.FC<TypeBadgeProps> = ({ type }) => {
     'lazer': 'bg-purple-100 text-purple-700',
     'investimento': 'bg-blue-100 text-blue-700',
     'divida': 'bg-rose-100 text-rose-700',
-    'extra': 'bg-green-100 text-green-700',
+    'extra': 'bg-blue-100 text-blue-700',
   };
   return (
     <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${colorMap[type] ?? 'bg-slate-100 text-slate-600'}`}>

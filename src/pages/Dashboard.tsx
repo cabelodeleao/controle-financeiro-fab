@@ -114,7 +114,7 @@ export const Dashboard: React.FC = () => {
           value={formatCurrency(extra)}
           subtitle={extra > 0 ? 'Receita extra registrada' : 'Sem receita extra no mês'}
           icon={<Zap size={22} className="text-white" />}
-          color="bg-emerald-500"
+          color="bg-purple-600"
           trend={extra > 0 ? 'up' : 'neutral'}
         />
         <StatCard
@@ -167,7 +167,7 @@ export const Dashboard: React.FC = () => {
           ))}
         </div>
         {extra > 0 && (
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 text-emerald-700">
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 text-purple-700">
             <span className="text-base">⚡</span>
             <p className="text-xs font-semibold">Extra de {formatCurrency(extra)} registrado este mês!</p>
           </div>

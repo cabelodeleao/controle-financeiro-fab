@@ -38,7 +38,7 @@ export const TRANSACTION_TYPE_COLORS: Record<TransactionType, string> = {
   'lazer': '#8b5cf6',
   'investimento': '#3b82f6',
   'divida': '#dc2626',
-  'extra': '#22c55e',
+  'extra': '#6366f1',
 };
 
 export type MoneySource =

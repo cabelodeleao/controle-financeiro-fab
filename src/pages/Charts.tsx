@@ -109,7 +109,7 @@ export const Charts: React.FC = () => {
               <Tooltip formatter={currency} />
               <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
               <Bar dataKey="receita" name="Receita" fill="#22c55e" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="extra" name="Extra" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="extra" name="Extra" fill="#6366f1" radius={[4, 4, 0, 0]} />
               <Bar dataKey="despesas" name="Despesas" fill="#ef4444" radius={[4, 4, 0, 0]} />
               <Bar dataKey="investido" name="Investido" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>
