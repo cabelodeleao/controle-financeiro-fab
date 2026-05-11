@@ -70,9 +70,34 @@ export const AppProvider: React.FC<{ children: ReactNode; userId: string }> = ({
           fetchRecurringExpenses(userId),
           fetchSettings(userId),
         ]);
-        if (dbTxs.length > 0) setTransactions(dbTxs);
-        if (dbRecs.length > 0) setRecurringExpenses(dbRecs);
-        if (dbSettings) setSettings(dbSettings);
+
+        const isFirstLogin = dbTxs.length === 0 && dbRecs.length === 0 && !dbSettings;
+
+        if (isFirstLogin) {
+          console.log('[Seed] Primeiro login detectado — populando dados iniciais');
+          const freshSettings = { ...INITIAL_SETTINGS, categories: DEFAULT_CATEGORIES };
+          const freshTransactions = generateInitialTransactions(freshSettings);
+          const freshRecurring = INITIAL_RECURRING_EXPENSES;
+
+          setSettings(freshSettings);
+          setTransactions(freshTransactions);
+          setRecurringExpenses(freshRecurring);
+
+          try {
+            await Promise.all([
+              upsertSettings(freshSettings, userId),
+              upsertTransactions(freshTransactions, userId),
+              upsertRecurringExpenses(freshRecurring, userId),
+            ]);
+            console.log('[Seed] Dados iniciais salvos no Supabase');
+          } catch (seedErr) {
+            reportError('Erro ao popular dados iniciais', seedErr);
+          }
+        } else {
+          if (dbTxs.length > 0) setTransactions(dbTxs);
+          if (dbRecs.length > 0) setRecurringExpenses(dbRecs);
+          if (dbSettings) setSettings(dbSettings);
+        }
       } catch (err) {
         reportError('Falha ao carregar dados', err);
       } finally {
