@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { MONTH_LABELS, MONTHS } from '../../types';
 import { useApp } from '../../context/AppContext';
-import { Menu, ChevronDown } from 'lucide-react';
+import { Menu, ChevronDown, AlertTriangle, X } from 'lucide-react';
 
 interface LayoutProps {
   currentPage: string;
@@ -19,7 +19,7 @@ const PAGE_TITLES: Record<string, string> = {
 export const Layout: React.FC<LayoutProps> = ({ currentPage, onNavigate, children, title }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { currentMonth, setCurrentMonth } = useApp();
+  const { currentMonth, setCurrentMonth, dbError, clearDbError } = useApp();
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f1f5f9' }}>
@@ -96,6 +96,17 @@ export const Layout: React.FC<LayoutProps> = ({ currentPage, onNavigate, childre
             </div>
           </div>
         </header>
+
+        {/* DB error banner */}
+        {dbError && (
+          <div className="flex-shrink-0 flex items-start gap-3 bg-red-50 border-b border-red-200 px-4 py-3">
+            <AlertTriangle size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
+            <p className="flex-1 text-xs text-red-700 font-medium">{dbError}</p>
+            <button onClick={clearDbError} className="text-red-400 hover:text-red-600 transition-colors flex-shrink-0">
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">

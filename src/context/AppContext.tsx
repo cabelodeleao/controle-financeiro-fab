@@ -16,6 +16,8 @@ interface AppContextType {
   settings: AppSettings;
   currentMonth: Month;
   dbLoading: boolean;
+  dbError: string | null;
+  clearDbError: () => void;
   setCurrentMonth: (month: Month) => void;
   addTransaction: (t: Omit<Transaction, 'id'>) => void;
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
@@ -36,6 +38,15 @@ export const AppProvider: React.FC<{ children: ReactNode; userId: string }> = ({
   const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
   const [currentMonth, setCurrentMonthState] = useState<Month>('maio');
   const [dbLoading, setDbLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
+
+  const clearDbError = useCallback(() => setDbError(null), []);
+
+  const reportError = useCallback((prefix: string, err: unknown) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(prefix, err);
+    setDbError(`${prefix}: ${msg}`);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -49,7 +60,7 @@ export const AppProvider: React.FC<{ children: ReactNode; userId: string }> = ({
         if (dbRecs.length > 0) setRecurringExpenses(dbRecs);
         if (dbSettings) setSettings(dbSettings);
       } catch (err) {
-        console.error('Falha ao carregar dados do Supabase:', err);
+        reportError('Falha ao carregar dados', err);
       } finally {
         setDbLoading(false);
       }
@@ -62,60 +73,60 @@ export const AppProvider: React.FC<{ children: ReactNode; userId: string }> = ({
   const addTransaction = useCallback((t: Omit<Transaction, 'id'>) => {
     const newTx = { ...t, id: generateId() };
     setTransactions(prev => [...prev, newTx]);
-    upsertTransaction(newTx, userId).catch(console.error);
-  }, [userId]);
+    upsertTransaction(newTx, userId).catch(err => reportError('Erro ao salvar lançamento', err));
+  }, [userId, reportError]);
 
   const updateTransaction = useCallback((id: string, updates: Partial<Transaction>) => {
     setTransactions(prev => {
       const next = prev.map(t => t.id === id ? { ...t, ...updates } : t);
       const updated = next.find(t => t.id === id);
-      if (updated) upsertTransaction(updated, userId).catch(console.error);
+      if (updated) upsertTransaction(updated, userId).catch(err => reportError('Erro ao atualizar lançamento', err));
       return next;
     });
-  }, [userId]);
+  }, [userId, reportError]);
 
   const deleteTransaction = useCallback((id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
-    deleteTransactionDb(id).catch(console.error);
-  }, []);
+    deleteTransactionDb(id).catch(err => reportError('Erro ao excluir lançamento', err));
+  }, [reportError]);
 
   const addRecurringExpense = useCallback((e: Omit<RecurringExpense, 'id'>) => {
     const newExp = { ...e, id: generateId() };
     setRecurringExpenses(prev => [...prev, newExp]);
-    upsertRecurringExpense(newExp, userId).catch(console.error);
-  }, [userId]);
+    upsertRecurringExpense(newExp, userId).catch(err => reportError('Erro ao salvar recorrente', err));
+  }, [userId, reportError]);
 
   const updateRecurringExpense = useCallback((id: string, updates: Partial<RecurringExpense>) => {
     setRecurringExpenses(prev => {
       const next = prev.map(e => e.id === id ? { ...e, ...updates } : e);
       const updated = next.find(e => e.id === id);
-      if (updated) upsertRecurringExpense(updated, userId).catch(console.error);
+      if (updated) upsertRecurringExpense(updated, userId).catch(err => reportError('Erro ao atualizar recorrente', err));
       return next;
     });
-  }, [userId]);
+  }, [userId, reportError]);
 
   const deleteRecurringExpense = useCallback((id: string) => {
     setRecurringExpenses(prev => prev.filter(e => e.id !== id));
-    deleteRecurringExpenseDb(id).catch(console.error);
-  }, []);
+    deleteRecurringExpenseDb(id).catch(err => reportError('Erro ao excluir recorrente', err));
+  }, [reportError]);
 
   const updateSettings = useCallback((updates: Partial<AppSettings>) => {
     setSettings(prev => {
       const next = { ...prev, ...updates };
-      upsertSettings(next, userId).catch(console.error);
+      upsertSettings(next, userId).catch(err => reportError('Erro ao salvar configurações', err));
       return next;
     });
-  }, [userId]);
+  }, [userId, reportError]);
 
   const generateRecurringForCurrentMonth = useCallback(() => {
     const newTxs = generateRecurringForMonth(recurringExpenses, transactions, currentMonth);
     if (newTxs.length > 0) {
       const withIds = newTxs.map(t => ({ ...t, id: generateId() }));
       setTransactions(prev => [...prev, ...withIds]);
-      upsertTransactions(withIds, userId).catch(console.error);
+      upsertTransactions(withIds, userId).catch(err => reportError('Erro ao gerar recorrentes', err));
     }
     return newTxs.length;
-  }, [recurringExpenses, transactions, currentMonth, userId]);
+  }, [recurringExpenses, transactions, currentMonth, userId, reportError]);
 
   const resetAllData = useCallback(() => {
     const freshSettings = { ...INITIAL_SETTINGS, categories: DEFAULT_CATEGORIES };
@@ -134,7 +145,7 @@ export const AppProvider: React.FC<{ children: ReactNode; userId: string }> = ({
       upsertTransactions(freshTransactions, userId),
       upsertRecurringExpenses(freshRecurring, userId),
       upsertSettings(freshSettings, userId),
-    ])).catch(console.error);
+    ])).catch(err => reportError('Erro ao resetar dados', err));
   }, [userId]);
 
   if (dbLoading) {
@@ -151,6 +162,7 @@ export const AppProvider: React.FC<{ children: ReactNode; userId: string }> = ({
   return (
     <AppContext.Provider value={{
       transactions, recurringExpenses, settings, currentMonth, dbLoading,
+      dbError, clearDbError,
       setCurrentMonth, addTransaction, updateTransaction, deleteTransaction,
       addRecurringExpense, updateRecurringExpense, deleteRecurringExpense,
       updateSettings, generateRecurringForCurrentMonth, resetAllData,
