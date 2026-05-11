@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import type { Transaction, RecurringExpense, AppSettings } from '../types';
 import { DEFAULT_CATEGORIES } from '../types';
 
-async function logSupabaseError(operation: string, error: unknown, payload?: unknown) {
+async function logSupabaseError(operation: string, error: unknown, payload?: unknown, table?: string) {
   const { data: { session } } = await supabase.auth.getSession();
   const authUid = session?.user?.id ?? null;
   const expiresAt = session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null;
@@ -24,6 +24,23 @@ async function logSupabaseError(operation: string, error: unknown, payload?: unk
     console.error('payload.user_id:', p.user_id, '(type:', typeof p.user_id, ')');
     console.error('user_id matches auth.uid():', p.user_id === authUid);
     console.error('full payload:', payload);
+
+    // Detecta o caso "PK existente pertence a outro usuário" (causa comum de 42501)
+    const code = (error as Record<string, unknown>)?.code;
+    const id = p.id;
+    if (code === '42501' && table && id && authUid) {
+      const { data: visibleRow } = await supabase.from(table).select('id, user_id').eq('id', id).maybeSingle();
+      if (!visibleRow) {
+        console.warn(
+          `[Diagnóstico] id="${id}" não é visível ao usuário atual via SELECT, ` +
+          `mas o INSERT falhou com 42501. Provavelmente existe uma linha com esse id ` +
+          `pertencente a OUTRO user_id, e o ON CONFLICT DO UPDATE bate na policy RLS. ` +
+          `Solução: gerar um id diferente para esta operação.`
+        );
+      } else if (visibleRow.user_id !== authUid) {
+        console.warn(`[Diagnóstico] Row id="${id}" pertence a user_id=${visibleRow.user_id}, não a ${authUid}.`);
+      }
+    }
   }
   console.groupEnd();
 }
@@ -88,7 +105,7 @@ export async function upsertTransaction(t: Transaction, userId: string): Promise
   console.log('[Supabase] upsertTransaction →', { user_id: userId, id: t.id });
   const { error } = await supabase.from('transactions').upsert(row);
   if (error) {
-    await logSupabaseError('upsertTransaction', error, row);
+    await logSupabaseError('upsertTransaction', error, row, 'transactions');
     throw error;
   }
 }
@@ -98,7 +115,7 @@ export async function upsertTransactions(ts: Transaction[], userId: string): Pro
   const rows = ts.map(t => transactionToRow(t, userId));
   const { error } = await supabase.from('transactions').upsert(rows);
   if (error) {
-    await logSupabaseError('upsertTransactions', error, rows[0]);
+    await logSupabaseError('upsertTransactions', error, rows[0], 'transactions');
     throw error;
   }
 }
@@ -168,7 +185,7 @@ export async function upsertRecurringExpense(e: RecurringExpense, userId: string
   const row = recurringToRow(e, userId);
   const { error } = await supabase.from('recurring_expenses').upsert(row);
   if (error) {
-    await logSupabaseError('upsertRecurringExpense', error, row);
+    await logSupabaseError('upsertRecurringExpense', error, row, 'recurring_expenses');
     throw error;
   }
 }
@@ -178,7 +195,7 @@ export async function upsertRecurringExpenses(es: RecurringExpense[], userId: st
   const rows = es.map(e => recurringToRow(e, userId));
   const { error } = await supabase.from('recurring_expenses').upsert(rows);
   if (error) {
-    await logSupabaseError('upsertRecurringExpenses', error, rows[0]);
+    await logSupabaseError('upsertRecurringExpenses', error, rows[0], 'recurring_expenses');
     throw error;
   }
 }

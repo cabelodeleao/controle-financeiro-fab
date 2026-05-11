@@ -76,22 +76,32 @@ export const AppProvider: React.FC<{ children: ReactNode; userId: string }> = ({
         if (isFirstLogin) {
           console.log('[Seed] Primeiro login detectado — populando dados iniciais');
           const freshSettings = { ...INITIAL_SETTINGS, categories: DEFAULT_CATEGORIES };
-          const freshTransactions = generateInitialTransactions(freshSettings);
-          const freshRecurring = INITIAL_RECURRING_EXPENSES;
+          // IDs únicos por usuário: a PK `id` é global (text), então IDs determinísticos
+          // como "sal-maio" colidem entre usuários e o ON CONFLICT DO UPDATE bate em
+          // linha de outro usuário, causando 42501 no RLS.
+          const freshTransactions = generateInitialTransactions(freshSettings).map(t => ({ ...t, id: generateId() }));
+          const freshRecurring = INITIAL_RECURRING_EXPENSES.map(e => ({ ...e, id: generateId() }));
 
           setSettings(freshSettings);
           setTransactions(freshTransactions);
           setRecurringExpenses(freshRecurring);
 
-          try {
-            await Promise.all([
-              upsertSettings(freshSettings, userId),
-              upsertTransactions(freshTransactions, userId),
-              upsertRecurringExpenses(freshRecurring, userId),
-            ]);
+          const results = await Promise.allSettled([
+            upsertSettings(freshSettings, userId),
+            upsertTransactions(freshTransactions, userId),
+            upsertRecurringExpenses(freshRecurring, userId),
+          ]);
+          const labels = ['settings', 'transactions', 'recurring_expenses'];
+          const failures = results
+            .map((r, i) => ({ label: labels[i], result: r }))
+            .filter(x => x.result.status === 'rejected');
+
+          if (failures.length === 0) {
             console.log('[Seed] Dados iniciais salvos no Supabase');
-          } catch (seedErr) {
-            reportError('Erro ao popular dados iniciais', seedErr);
+          } else {
+            console.error('[Seed] Falhas:', failures);
+            const first = failures[0].result as PromiseRejectedResult;
+            reportError(`Seed falhou em ${failures.map(f => f.label).join(', ')}`, first.reason);
           }
         } else {
           if (dbTxs.length > 0) setTransactions(dbTxs);

@@ -9,7 +9,7 @@
 -- --------------------------------------------------------------
 
 create table if not exists transactions (
-  id             text        primary key,
+  id             text        not null,
   user_id        uuid        not null references auth.users(id) on delete cascade,
   date           text        not null default '',
   description    text        not null default '',
@@ -25,11 +25,12 @@ create table if not exists transactions (
   is_recurring   boolean     not null default false,
   recurring_id   text,
   observations   text,
-  created_at     timestamptz not null default now()
+  created_at     timestamptz not null default now(),
+  primary key (user_id, id)
 );
 
 create table if not exists recurring_expenses (
-  id            text        primary key,
+  id            text        not null,
   user_id       uuid        not null references auth.users(id) on delete cascade,
   name          text        not null,
   type          text        not null,
@@ -40,7 +41,8 @@ create table if not exists recurring_expenses (
   months        text[]      not null default '{}',
   active        boolean     not null default true,
   observations  text,
-  created_at    timestamptz not null default now()
+  created_at    timestamptz not null default now(),
+  primary key (user_id, id)
 );
 
 create table if not exists user_settings (
@@ -78,24 +80,24 @@ alter table recurring_expenses enable row level security;
 alter table user_settings      enable row level security;
 
 
+-- Garantir grants básicos para o role authenticated
+grant select, insert, update, delete on transactions       to authenticated;
+grant select, insert, update, delete on recurring_expenses to authenticated;
+grant select, insert, update, delete on user_settings      to authenticated;
+
+
 -- transactions
 drop policy if exists "tx_select" on transactions;
 drop policy if exists "tx_insert" on transactions;
 drop policy if exists "tx_update" on transactions;
 drop policy if exists "tx_delete" on transactions;
+drop policy if exists "tx_all"    on transactions;
 
-create policy "tx_select" on transactions
-  for select using (auth.uid() = user_id);
-
-create policy "tx_insert" on transactions
-  for insert with check (auth.uid() = user_id);
-
-create policy "tx_update" on transactions
-  for update using (auth.uid() = user_id)
+create policy "tx_all" on transactions
+  for all
+  to authenticated
+  using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
-
-create policy "tx_delete" on transactions
-  for delete using (auth.uid() = user_id);
 
 
 -- recurring_expenses
@@ -103,19 +105,13 @@ drop policy if exists "rec_select" on recurring_expenses;
 drop policy if exists "rec_insert" on recurring_expenses;
 drop policy if exists "rec_update" on recurring_expenses;
 drop policy if exists "rec_delete" on recurring_expenses;
+drop policy if exists "rec_all"    on recurring_expenses;
 
-create policy "rec_select" on recurring_expenses
-  for select using (auth.uid() = user_id);
-
-create policy "rec_insert" on recurring_expenses
-  for insert with check (auth.uid() = user_id);
-
-create policy "rec_update" on recurring_expenses
-  for update using (auth.uid() = user_id)
+create policy "rec_all" on recurring_expenses
+  for all
+  to authenticated
+  using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
-
-create policy "rec_delete" on recurring_expenses
-  for delete using (auth.uid() = user_id);
 
 
 -- user_settings
@@ -123,16 +119,10 @@ drop policy if exists "cfg_select" on user_settings;
 drop policy if exists "cfg_insert" on user_settings;
 drop policy if exists "cfg_update" on user_settings;
 drop policy if exists "cfg_delete" on user_settings;
+drop policy if exists "cfg_all"    on user_settings;
 
-create policy "cfg_select" on user_settings
-  for select using (auth.uid() = user_id);
-
-create policy "cfg_insert" on user_settings
-  for insert with check (auth.uid() = user_id);
-
-create policy "cfg_update" on user_settings
-  for update using (auth.uid() = user_id)
+create policy "cfg_all" on user_settings
+  for all
+  to authenticated
+  using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
-
-create policy "cfg_delete" on user_settings
-  for delete using (auth.uid() = user_id);
