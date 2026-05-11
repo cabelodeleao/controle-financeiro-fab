@@ -43,7 +43,21 @@ export const AppProvider: React.FC<{ children: ReactNode; userId: string }> = ({
   const clearDbError = useCallback(() => setDbError(null), []);
 
   const reportError = useCallback((prefix: string, err: unknown) => {
-    const msg = err instanceof Error ? err.message : String(err);
+    let msg = 'erro desconhecido';
+    if (err instanceof Error) {
+      msg = err.message;
+    } else if (err && typeof err === 'object') {
+      const e = err as Record<string, unknown>;
+      const parts = [
+        e.message ? String(e.message) : null,
+        e.code ? `[${e.code}]` : null,
+        e.details ? String(e.details) : null,
+        e.hint ? `hint: ${e.hint}` : null,
+      ].filter(Boolean);
+      msg = parts.length > 0 ? parts.join(' — ') : JSON.stringify(err);
+    } else {
+      msg = String(err);
+    }
     console.error(prefix, err);
     setDbError(`${prefix}: ${msg}`);
   }, []);

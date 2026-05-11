@@ -79,6 +79,11 @@ alter table user_settings      enable row level security;
 
 
 -- transactions
+drop policy if exists "tx_select" on transactions;
+drop policy if exists "tx_insert" on transactions;
+drop policy if exists "tx_update" on transactions;
+drop policy if exists "tx_delete" on transactions;
+
 create policy "tx_select" on transactions
   for select using (auth.uid() = user_id);
 
@@ -94,6 +99,11 @@ create policy "tx_delete" on transactions
 
 
 -- recurring_expenses
+drop policy if exists "rec_select" on recurring_expenses;
+drop policy if exists "rec_insert" on recurring_expenses;
+drop policy if exists "rec_update" on recurring_expenses;
+drop policy if exists "rec_delete" on recurring_expenses;
+
 create policy "rec_select" on recurring_expenses
   for select using (auth.uid() = user_id);
 
@@ -109,6 +119,11 @@ create policy "rec_delete" on recurring_expenses
 
 
 -- user_settings
+drop policy if exists "cfg_select" on user_settings;
+drop policy if exists "cfg_insert" on user_settings;
+drop policy if exists "cfg_update" on user_settings;
+drop policy if exists "cfg_delete" on user_settings;
+
 create policy "cfg_select" on user_settings
   for select using (auth.uid() = user_id);
 

@@ -2,6 +2,32 @@ import { supabase } from './supabase';
 import type { Transaction, RecurringExpense, AppSettings } from '../types';
 import { DEFAULT_CATEGORIES } from '../types';
 
+async function logSupabaseError(operation: string, error: unknown, payload?: unknown) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const authUid = session?.user?.id ?? null;
+  const expiresAt = session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null;
+
+  console.group(`[Supabase] ${operation} FAILED`);
+  console.error('error:', error);
+  if (error && typeof error === 'object') {
+    const e = error as Record<string, unknown>;
+    console.error('error.message:', e.message);
+    console.error('error.code:', e.code);
+    console.error('error.details:', e.details);
+    console.error('error.hint:', e.hint);
+    console.error('error.status:', e.status);
+  }
+  console.error('JWT auth.uid():', authUid);
+  console.error('session expires_at:', expiresAt);
+  if (payload) {
+    const p = payload as Record<string, unknown>;
+    console.error('payload.user_id:', p.user_id, '(type:', typeof p.user_id, ')');
+    console.error('user_id matches auth.uid():', p.user_id === authUid);
+    console.error('full payload:', payload);
+  }
+  console.groupEnd();
+}
+
 // ─── Transactions ────────────────────────────────────────────────────────────
 
 function rowToTransaction(row: Record<string, unknown>): Transaction {
@@ -50,31 +76,47 @@ export async function fetchTransactions(userId: string): Promise<Transaction[]> 
     .from('transactions')
     .select('*')
     .eq('user_id', userId);
-  if (error) throw error;
+  if (error) {
+    await logSupabaseError('fetchTransactions', error, { user_id: userId });
+    throw error;
+  }
   return (data ?? []).map(rowToTransaction);
 }
 
 export async function upsertTransaction(t: Transaction, userId: string): Promise<void> {
-  const { error } = await supabase.from('transactions').upsert(transactionToRow(t, userId));
-  if (error) throw error;
+  const row = transactionToRow(t, userId);
+  console.log('[Supabase] upsertTransaction →', { user_id: userId, id: t.id });
+  const { error } = await supabase.from('transactions').upsert(row);
+  if (error) {
+    await logSupabaseError('upsertTransaction', error, row);
+    throw error;
+  }
 }
 
 export async function upsertTransactions(ts: Transaction[], userId: string): Promise<void> {
   if (ts.length === 0) return;
-  const { error } = await supabase
-    .from('transactions')
-    .upsert(ts.map(t => transactionToRow(t, userId)));
-  if (error) throw error;
+  const rows = ts.map(t => transactionToRow(t, userId));
+  const { error } = await supabase.from('transactions').upsert(rows);
+  if (error) {
+    await logSupabaseError('upsertTransactions', error, rows[0]);
+    throw error;
+  }
 }
 
 export async function deleteTransactionDb(id: string): Promise<void> {
   const { error } = await supabase.from('transactions').delete().eq('id', id);
-  if (error) throw error;
+  if (error) {
+    await logSupabaseError('deleteTransactionDb', error, { id });
+    throw error;
+  }
 }
 
 export async function deleteAllTransactions(userId: string): Promise<void> {
   const { error } = await supabase.from('transactions').delete().eq('user_id', userId);
-  if (error) throw error;
+  if (error) {
+    await logSupabaseError('deleteAllTransactions', error, { user_id: userId });
+    throw error;
+  }
 }
 
 // ─── Recurring Expenses ───────────────────────────────────────────────────────
@@ -115,31 +157,46 @@ export async function fetchRecurringExpenses(userId: string): Promise<RecurringE
     .from('recurring_expenses')
     .select('*')
     .eq('user_id', userId);
-  if (error) throw error;
+  if (error) {
+    await logSupabaseError('fetchRecurringExpenses', error, { user_id: userId });
+    throw error;
+  }
   return (data ?? []).map(rowToRecurring);
 }
 
 export async function upsertRecurringExpense(e: RecurringExpense, userId: string): Promise<void> {
-  const { error } = await supabase.from('recurring_expenses').upsert(recurringToRow(e, userId));
-  if (error) throw error;
+  const row = recurringToRow(e, userId);
+  const { error } = await supabase.from('recurring_expenses').upsert(row);
+  if (error) {
+    await logSupabaseError('upsertRecurringExpense', error, row);
+    throw error;
+  }
 }
 
 export async function upsertRecurringExpenses(es: RecurringExpense[], userId: string): Promise<void> {
   if (es.length === 0) return;
-  const { error } = await supabase
-    .from('recurring_expenses')
-    .upsert(es.map(e => recurringToRow(e, userId)));
-  if (error) throw error;
+  const rows = es.map(e => recurringToRow(e, userId));
+  const { error } = await supabase.from('recurring_expenses').upsert(rows);
+  if (error) {
+    await logSupabaseError('upsertRecurringExpenses', error, rows[0]);
+    throw error;
+  }
 }
 
 export async function deleteRecurringExpenseDb(id: string): Promise<void> {
   const { error } = await supabase.from('recurring_expenses').delete().eq('id', id);
-  if (error) throw error;
+  if (error) {
+    await logSupabaseError('deleteRecurringExpenseDb', error, { id });
+    throw error;
+  }
 }
 
 export async function deleteAllRecurringExpenses(userId: string): Promise<void> {
   const { error } = await supabase.from('recurring_expenses').delete().eq('user_id', userId);
-  if (error) throw error;
+  if (error) {
+    await logSupabaseError('deleteAllRecurringExpenses', error, { user_id: userId });
+    throw error;
+  }
 }
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
@@ -161,13 +218,16 @@ export async function fetchSettings(userId: string): Promise<AppSettings | null>
     .eq('user_id', userId)
     .single();
   // PGRST116 = no rows found (first login)
-  if (error && error.code !== 'PGRST116') throw error;
+  if (error && error.code !== 'PGRST116') {
+    await logSupabaseError('fetchSettings', error, { user_id: userId });
+    throw error;
+  }
   if (!data) return null;
   return rowToSettings(data);
 }
 
 export async function upsertSettings(settings: AppSettings, userId: string): Promise<void> {
-  const { error } = await supabase.from('user_settings').upsert({
+  const row = {
     user_id: userId,
     salario_fab: settings.salarioFAB,
     pensao: settings.pensao,
@@ -175,6 +235,10 @@ export async function upsertSettings(settings: AppSettings, userId: string): Pro
     accounts: settings.accounts,
     categories: settings.categories,
     updated_at: new Date().toISOString(),
-  });
-  if (error) throw error;
+  };
+  const { error } = await supabase.from('user_settings').upsert(row);
+  if (error) {
+    await logSupabaseError('upsertSettings', error, row);
+    throw error;
+  }
 }
